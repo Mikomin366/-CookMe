@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход</title>
+    <link rel="stylesheet" href="css/project_page1.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="main.html" class="logo"><img src="/images/Logo.png" alt="Логотип"></a>
+        </div>
+        <div class="auth-buttons">
+            <a href="#" class="enter-button">Войти</a>
+            <a href="register.html" class="register-button">Зарегистрироваться</a>
+        </div>   
+    </header>
+    <main class="login-container">
+        <h1>Войти</h1>
+        <form class="login-form" id="loginForm">
+            <div class="input-container">
+                <input type="text" id="login" name="login" placeholder="Логин" 
+                autocomplete="username" required>
+            </div>
+
+            <div class="input-container">
+                <input type="password" id="password" name="password" placeholder="Пароль" 
+                autocomplete="current-password" required>
+            </div>
+
+            <div class="options-row">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="rememberMe">
+                    <p>Запомнить меня</p>
+                </label>
+                <a href="#" class="forgot-link" id="forgotPasswordLink">Забыли пароль?</a>
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">Войти</button>
+        </form>
+        
+        <!-- Контейнеры для сообщений -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </main>
+
+    <script>
+        // ========== НАСТРОЙКИ БЭКЕНДА ==========
+        const API_URL = '/api/login';
+        
+        // Получаем элементы
+        const loginForm = document.getElementById('loginForm');
+        const loginInput = document.getElementById('login');
+        const passwordInput = document.getElementById('password');
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+        const loginButton = document.getElementById('loginButton');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const successMessageDiv = document.getElementById('successMessage');
+        
+        // Функция для скрытия всех сообщений
+        function hideAllMessages() {
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+            errorMessageDiv.textContent = '';
+            successMessageDiv.textContent = '';
+        }
+        
+        // Функция для отображения ошибки
+        function showError(message) {
+            hideAllMessages();
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            
+            // Автоматически скрыть через 5 секунд
+            setTimeout(() => {
+                errorMessageDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Функция для отображения успеха
+        function showSuccess(message) {
+            hideAllMessages();
+            successMessageDiv.textContent = message;
+            successMessageDiv.style.display = 'block';
+        }
+        
+        // Функция для сохранения сессии (только логин и пароль)
+        function saveSession(userData) {
+            const sessionData = {
+                userId: userData.id,
+                login: userData.login,
+                token: userData.token || 'session_' + Date.now(),
+                timestamp: Date.now()
+            };
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('userSession', JSON.stringify(sessionData));
+            
+            // Если выбран "Запомнить меня", сохраняем логин для автозаполнения
+            if (rememberMeCheckbox.checked) {
+                localStorage.setItem('rememberedUser', JSON.stringify({
+                    login: userData.login,
+                    token: sessionData.token
+                }));
+            } else {
+                // Если не запоминать, удаляем сохраненный логин
+                localStorage.removeItem('rememberedUser');
+                // Сохраняем сессию только в sessionStorage
+                sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+                localStorage.removeItem('userSession');
+            }
+        }
+        
+        // Функция для проверки авторизации при загрузке страницы
+        function checkExistingSession() {
+            // Проверяем сохраненного пользователя для автозаполнения
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                try {
+                    const userData = JSON.parse(rememberedUser);
+                    if (loginInput && userData.login) {
+                        loginInput.value = userData.login;
+                    }
+                } catch (e) {
+                    console.error('Ошибка парсинга данных', e);
+                }
+            }
+        }
+        
+        // Функция для отправки запроса на бэкенд
+        async function loginUser(login, password) {
+            try {
+                // Отправляем POST запрос на сервер
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        login: login,
+                        password: password
+                    })
+                });
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    let errorMessage = 'Ошибка авторизации';
+                    
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || `Ошибка ${response.status}`;
+                    } catch (e) {
+                        errorMessage = `Ошибка сервера: ${response.status}`;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                // Получаем данные пользователя
+                const userData = await response.json();
+                
+                return {
+                    success: true,
+                    user: userData
+                };
+                
+            } catch (error) {
+                console.error('Ошибка при входе:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        // Функция для проверки валидности данных
+        function validateForm() {
+            const login = loginInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!login) {
+                showError('Введите логин');
+                loginInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showError('Введите пароль');
+                passwordInput.focus();
+                return false;
+            }
+            
+            if (password.length < 4) {
+                showError('Пароль должен содержать не менее 4 символов');
+                passwordInput.focus();
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Функция для установки состояния загрузки
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loginButton.disabled = true;
+                loginButton.classList.add('loading');
+                loginButton.textContent = 'Вход...';
+            } else {
+                loginButton.disabled = false;
+                loginButton.classList.remove('loading');
+                loginButton.textContent = 'Войти';
+            }
+        }
+        
+        // Основная функция обработки формы
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            
+            // Скрываем старые сообщения
+            hideAllMessages();
+            
+            // Валидация данных
+            if (!validateForm()) {
+                return;
+            }
+            
+            const login = loginInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            // Показываем состояние загрузки
+            setLoading(true);
+            
+            // Отправляем запрос на бэкенд
+            const result = await loginUser(login, password);
+            
+            if (result.success) {
+                // Успешный вход
+                showSuccess('Вход выполнен успешно! Перенаправление...');
+                
+                // Сохраняем сессию
+                saveSession(result.user);
+                
+                // Перенаправляем на главную страницу через 1 секунду
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 1000);
+                
+            } else {
+                // Ошибка входа
+                showError(result.error || 'Неверный логин или пароль');
+                setLoading(false);
+            }
+        }
+        
+        // Функция для восстановления пароля
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            showError('Для восстановления пароля обратитесь к администратору');
+        }
+        
+        // Инициализация обработчиков событий
+        document.addEventListener('DOMContentLoaded', () => {
+            // Проверяем существующую сессию
+            checkExistingSession();
+            
+            // Добавляем обработчик отправки формы
+            loginForm.addEventListener('submit', handleLoginSubmit);
+            
+            // Добавляем обработчик для кнопки "Забыли пароль?"
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            if (forgotLink) {
+                forgotLink.addEventListener('click', handleForgotPassword);
+            }
+            
+            // Добавляем обработчик для клавиши Enter
+            const inputs = [loginInput, passwordInput];
+            inputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('keypress', (event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            handleLoginSubmit(event);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
