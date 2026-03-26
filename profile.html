@@ -1,0 +1,263 @@
+/*1*/
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="main.html" class="logo"><img src="/images/Logo.png"></a>
+        </div>
+        <div class="profile-icon" id="profileIcon">
+            <img src="images/Ellipse 21.png" class="profile-img">
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">Профиль</a>
+                <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
+                <button class="dropdown-item" id="logoutBtn">Выйти</button>
+            </div>
+        </div>
+    </header>
+    
+    <h1 class="username" id="userName">Имя пользователя</h1>
+    
+    <main class="profile-container">
+        <div class="profile-buttons">
+            <button class="add-recipe-button" id="addRecipeButton">Добавить новый рецепт</button>
+            <button class="export-button" id="exportButton">Выгрузить</button>
+        </div>
+        <div class="recipes-header">
+            <h1 class="recipes-c">Ваши рецепты</h1>
+            <button class="favorite-button" id="favoriteButton">Избранное</button>
+        </div>
+        <div id="favoriteStatus" class="favorite-status"></div>
+    </main>
+
+    <script>
+        // Получаем данные пользователя из сессии
+        function getUserData() {
+            let sessionData = localStorage.getItem('userSession');
+            if (!sessionData) {
+                sessionData = sessionStorage.getItem('userSession');
+            }
+            if (sessionData) {
+                try {
+                    return JSON.parse(sessionData);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+        
+        // Сохраняем данные пользователя
+        function saveUserData(userData) {
+            const sessionData = {
+                userId: userData.id,
+                login: userData.login,
+                token: userData.token || 'session_' + Date.now(),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('userSession', JSON.stringify(sessionData));
+            sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+        }
+        
+        // Отображаем имя пользователя
+        function displayUserName() {
+            const userData = getUserData();
+            const userNameElement = document.getElementById('userName');
+            
+            if (userData && userData.login) {
+                userNameElement.textContent = userData.login;
+            }
+        }
+        
+        // Выход из аккаунта
+        function logout() {
+            localStorage.removeItem('userSession');
+            localStorage.removeItem('rememberedUser');
+            sessionStorage.removeItem('userSession');
+            window.location.href = 'enter.html';
+        }
+        
+        // Редактирование профиля
+        function editProfile() {
+            const userData = getUserData();
+            if (userData) {
+                document.getElementById('editLogin').value = userData.login || '';
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editModal').style.display = 'flex';
+            }
+        }
+        
+        // Сохранение изменений профиля
+        async function saveProfileChanges() {
+            const userData = getUserData();
+            if (!userData) return;
+            
+            const newLogin = document.getElementById('editLogin').value.trim();
+            const newPassword = document.getElementById('editPassword').value.trim();
+            
+            if (!newLogin) {
+                alert('Логин не может быть пустым');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/users/${userData.userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login: newLogin,
+                        password: newPassword || undefined
+                    })
+                });
+                
+                if (response.ok) {
+                    userData.login = newLogin;
+                    saveUserData(userData);
+                    displayUserName();
+                    document.getElementById('editModal').style.display = 'none';
+                    alert('Профиль успешно обновлен');
+                } else {
+                    alert('Ошибка при обновлении профиля');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при обновлении профиля');
+            }
+        }
+        
+        // Функция для переключения фильтра избранного
+        function toggleFavoriteFilter() {
+            const favoriteButton = document.getElementById('favoriteButton');
+            const isActive = favoriteButton.classList.contains('active');
+            
+            if (isActive) {
+                // Выключаем фильтр
+                favoriteButton.classList.remove('active');
+                localStorage.removeItem('showOnlyFavorites');
+                favoriteButton.textContent = 'Избранное';
+            } else {
+                // Включаем фильтр
+                favoriteButton.classList.add('active');
+                localStorage.setItem('showOnlyFavorites', 'true');
+                favoriteButton.textContent = 'Показать все';
+            }
+            
+            // Обновляем главную страницу, если она открыта
+            const mainWindow = window.opener || window.parent;
+            if (mainWindow && mainWindow.location.href.includes('main.html')) {
+                mainWindow.location.reload();
+            }
+            
+            // Показываем уведомление
+            showNotification(isActive ? 'Фильтр избранного выключен' : 'Показываются только избранные рецепты');
+        }
+        
+        // Функция для отображения уведомления
+        function showNotification(message) {
+            const statusDiv = document.getElementById('favoriteStatus');
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 2000);
+        }
+        
+        // Проверяем состояние фильтра при загрузке
+        function updateFavoriteButtonState() {
+            const favoriteButton = document.getElementById('favoriteButton');
+            const isActive = localStorage.getItem('showOnlyFavorites') === 'true';
+            
+            if (isActive) {
+                favoriteButton.classList.add('active');
+                favoriteButton.textContent = 'Показать все';
+            } else {
+                favoriteButton.classList.remove('active');
+                favoriteButton.textContent = 'Избранное';
+            }
+        }
+        
+        // Выпадающее меню
+        function initDropdown() {
+            const profileIcon = document.getElementById('profileIcon');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            profileIcon.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', () => {
+                dropdownMenu.classList.remove('show');
+            });
+            
+            dropdownMenu.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+        }
+        
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            displayUserName();
+            initDropdown();
+            updateFavoriteButtonState();
+            
+            const addButton = document.getElementById('addRecipeButton');
+            const exportButton = document.getElementById('exportButton');
+            const favoriteButton = document.getElementById('favoriteButton');
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            
+            if (addButton) {
+                addButton.addEventListener('click', () => {
+                    window.location.href = 'add-recipe.html';
+                });
+            }
+            
+            if (exportButton) {
+                exportButton.addEventListener('click', () => {
+                    alert('Функция выгрузки будет доступна позже');
+                });
+            }
+            
+            if (favoriteButton) {
+                favoriteButton.addEventListener('click', toggleFavoriteFilter);
+            }
+            
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', editProfile);
+            }
+            
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+            
+            if (saveChangesBtn) {
+                saveChangesBtn.addEventListener('click', saveProfileChanges);
+            }
+            
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => {
+                    document.getElementById('editModal').style.display = 'none';
+                });
+            }
+            
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('editModal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

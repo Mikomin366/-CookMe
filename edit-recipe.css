@@ -1,0 +1,481 @@
+/*1*/
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 110px;
+    padding-right: 110px;
+    padding-top: 54px;
+    padding-bottom: 61px;
+    box-sizing: border-box;
+}
+
+.logo {
+    margin-left: -20px;
+}
+
+body {
+    background-color: #FFF3E0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.information-container {
+    width: 1600px;
+    min-height: 1300px;
+    height: auto;
+    background: #FFF8EE;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    margin-left: 110px;
+    margin-right: 110px;
+    margin-bottom: 105px;
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-bottom: 81px;
+}
+
+.tl {
+    color: #9B5E2E;
+    font-size: 42px;
+}
+
+/* Иконка профиля */
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    margin-right: 10px;
+    position: relative;
+}
+
+
+
+.dropdown-menu {
+    position: absolute;
+    top: 75px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 180px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 16px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.dropdown-item:first-child {
+    border-radius: 13px 13px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 13px 13px;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
+}
+
+/* Наполнения */
+.information-container {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.image-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.image-label {
+    font-size: 42px;
+    font-weight: 600;
+    color: #9B5E2E;
+    margin-top: 40px;
+    margin-left: 10px;
+}
+
+.recipe-image-box {
+    width: 800px;
+    height: 654px;
+    background: #F5E5D4;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: #FFEDD2;
+}
+
+.recipe-image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe-image-box .placeholder {
+    text-align: center;
+    color: #9B5E2E;
+    font-size: 36px;
+}
+
+.recipe-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 100px;
+    width: 600px;
+    margin-left: 50px;
+}
+
+.form-field {
+    display: flex;
+    background-color: #FFEDD2;
+    flex-direction: column;
+    gap: 8px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    padding: 25px 25px;
+}
+
+.form-field label {
+    font-size: 22px;
+    color: #9B5E2E;
+}
+
+.form-field input, .form-field textarea {
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    padding: 12px 16px;
+    font-size: 20px;
+    color: #9B5E2E;
+    font-family: inherit;
+}
+
+.form-field input::placeholder, .form-field textarea::placeholder {
+    color: #CBA77B;
+}
+
+.form-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.categories-input {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.categories-input input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ингредиенты */
+.ingredients-wrapper {
+    position: relative;
+    width: 780px;
+}
+
+.ingredients-field {
+    margin-top: 30px;
+    width: 760px;
+    position: relative;
+}
+
+.ingredient-add-button {
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    z-index: 10;
+}
+
+.ingredient-add-button img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.ingredients-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.ingredient-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #FFEDD2;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    padding: 15px 20px;
+    position: relative;
+    min-height: 65px;
+}
+
+.ingredient-text {
+    flex: 1;
+    font-size: 18px;
+    color: #9B5E2E;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+}
+
+.delete-ingredient-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.delete-ingredient-button img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+/* Пошаговый рецепт */
+.steps-section {
+    margin-top: 30px;
+    width: 760px;
+    background: #FFEDD2;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.steps-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.steps-header label {
+    font-size: 22px;
+    color: #9B5E2E;
+}
+
+.add-step-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    margin-right: 5px;
+}
+
+.add-step-button img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    background: #FFEDD2;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9B5E2E;
+    border: 3px solid #9B5E2E;
+    font-size: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content textarea {
+    width: 100%;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    padding: 12px 16px;
+    font-size: 16px;
+    color: #9B5E2E;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+
+.step-content textarea::placeholder {
+    color: #CBA77B;
+}
+
+.step-time-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.step-time-input {
+    width: 100px;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #9B5E2E;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.step-time-input::placeholder {
+    color: #CBA77B;
+}
+
+.step-time-label {
+    font-size: 14px;
+    color: #9B5E2E;
+}
+
+.delete-step-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.delete-step-button img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+/* Кнопка добавления описания */
+.description-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.description-button {
+    width: 100%;
+    height: 100px;
+    background-color: #C5E0B4;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    padding: 15px 20px;
+    font-size: 32px;
+    color: #9B5E2E;
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+}
+
+.description-button:hover {
+    background-color: #b1d29b;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .information-container {
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        flex-direction: column;
+    }
+    
+    .recipe-image-box {
+        width: 100%;
+        height: auto;
+        min-height: 300px;
+    }
+    
+    .recipe-form-fields {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .ingredients-wrapper, .steps-section, .ingredients-field {
+        width: 100%;
+    }
+    
+    .ingredient-add-button {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+

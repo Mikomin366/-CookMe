@@ -1,0 +1,336 @@
+/*1*/
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="#" class="logo"><img src="/images/Logo.png"></a>
+        </div>
+        <div class="filter-group">
+            <select id="sortFilter" class="filter-select">
+                <option value="default">Фильтр</option>
+                <option value="time_asc">Меньше по времени</option>
+                <option value="time_desc">Больше по времени</option>
+                <option value="name_asc">Сортировка в алфавитном порядке</option>
+                <option value="calories_asc">Сортировка по калориям</option>
+                <option value="favorite_first">Сначала избранные</option>
+            </select>
+        </div>
+        <div class="search-group">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поисковая строка">
+        </div>
+        <div class="auth-buttons">
+            <a href="enter.html" class="enter-button">Войти</a>
+            <a href="register.html" class="register-button">Зарегистрироваться</a>
+        </div>   
+    </header>
+    
+    <div class="main-layout">
+        <!-- Левый контейнер "Рецепт дня" -->
+        <div class="recipe-day-container">
+            <div class="recipe-day-title">Рецепт-дня</div>
+            <div class="recipe-day-box" id="recipeOfTheDayBtn">
+                <!-- Декоративные кружки (такого же размера как в карточках) -->
+                <div class="day-decorative-circles">
+                    <div class="day-outer-circle">
+                        <div class="day-inner-circle"></div>
+                    </div>
+                </div>
+                <div class="recipe-day-text">
+                    <p>Нажми на меня,</p>
+                    <p>сделай свой день</p>
+                    <p>вкуснее</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Правый контейнер main-container -->
+        <main class="main-container" id="mainContainer">
+            <h1 class="catalog-title">Каталог рецептов</h1>
+            
+            <!-- Контейнер для карточек -->
+            <div id="recipesContainer"></div>
+        </main>
+    </div>
+
+    <script>
+        // ========== НАСТРОЙКИ БЭКЕНДА ==========
+        const API_URL = '/api/recipes';
+        
+        // Глобальные переменные
+        let allRecipes = [];
+        let currentSort = 'default';
+        let currentSearch = '';
+        
+        // ========== ФУНКЦИЯ ДЛЯ ПЕРЕХОДА НА СТРАНИЦУ ИНФОРМАЦИИ О РЕЦЕПТЕ ==========
+        function goToRecipePage(recipeId) {
+            window.location.href = `information.html?id=${recipeId}`;
+        }
+        
+        // ========== ФУНКЦИЯ ДЛЯ ПЕРЕХОДА НА СЛУЧАЙНЫЙ РЕЦЕПТ ДНЯ ==========
+        function goToRandomRecipe() {
+            if (allRecipes.length > 0) {
+                const randomIndex = Math.floor(Math.random() * allRecipes.length);
+                const randomRecipe = allRecipes[randomIndex];
+                window.location.href = `information.html?id=${randomRecipe.id}`;
+            } else {
+                console.log('Нет рецептов для отображения');
+            }
+        }
+        
+        // ========== ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ИЗ БД ==========
+        async function loadRecipesFromBackend() {
+            try {
+                const container = document.getElementById('recipesContainer');
+                container.innerHTML = '<div class="empty-state">Загрузка рецептов...</div>';
+                
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allRecipes = data;
+                
+                filterAndSortRecipes();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                loadExampleData();
+            }
+        }
+        
+        // ========== ЗАГРУЗКА ПРИМЕРНЫХ ДАННЫХ ==========
+        function loadExampleData() {
+            const exampleRecipes = [
+                {
+                    id: 1,
+                    name: "Цезарь с курицей",
+                    categories: ["Салаты", "Основные блюда"],
+                    calories: 420,
+                    cookingTime: 25,
+                    author: "Анна Петрова",
+                    isFavorite: false
+                },
+                {
+                    id: 2,
+                    name: "Том Ям с креветками",
+                    categories: ["Супы", "Тайская кухня"],
+                    calories: 380,
+                    cookingTime: 35,
+                    author: "Павел Соколов",
+                    isFavorite: true
+                },
+                {
+                    id: 3,
+                    name: "Паста Карбонара",
+                    categories: ["Паста", "Итальянская"],
+                    calories: 680,
+                    cookingTime: 20,
+                    author: "Мария Риччи",
+                    isFavorite: false
+                },
+                {
+                    id: 4,
+                    name: "Борщ украинский",
+                    categories: ["Супы", "Традиционные"],
+                    calories: 310,
+                    cookingTime: 90,
+                    author: "Зинаида Ивановна",
+                    isFavorite: false
+                }
+            ];
+            allRecipes = exampleRecipes;
+            filterAndSortRecipes();
+        }
+        
+        // ========== ФУНКЦИЯ ДОБАВЛЕНИЯ/УДАЛЕНИЯ ИЗ ИЗБРАННОГО ==========
+        async function toggleFavorite(recipeId, event) {
+            event.stopPropagation();
+            
+            const recipe = allRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            const newFavoriteStatus = !recipe.isFavorite;
+            
+            try {
+                const response = await fetch(`${API_URL}/${recipeId}/favorite`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ isFavorite: newFavoriteStatus })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка обновления статуса');
+                }
+                
+                recipe.isFavorite = newFavoriteStatus;
+                filterAndSortRecipes();
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                recipe.isFavorite = newFavoriteStatus;
+                filterAndSortRecipes();
+            }
+        }
+        
+        // ========== ФУНКЦИЯ ДЛЯ КЛИКА ПО КАРТОЧКЕ ==========
+        function handleCardClick(recipeId) {
+            goToRecipePage(recipeId);
+        }
+        
+        // ========== ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ КАРТОЧЕК ==========
+        function displayRecipes(recipes) {
+            const container = document.getElementById('recipesContainer');
+            
+            if (!recipes || recipes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        Рецептов пока нет<br>
+                        Создайте свой первый рецепт!
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="recipes-grid">
+                    ${recipes.map(recipe => `
+                        <div class="recipe-card" data-id="${recipe.id}" onclick="handleCardClick(${recipe.id})">
+                            <!-- Декоративные кружки по центру -->
+                            <div class="decorative-circles">
+                                <div class="outer-circle">
+                                    <div class="inner-circle"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Кнопка избранного в правом верхнем углу -->
+                            <div class="favorite-btn ${recipe.isFavorite ? 'active' : ''}" onclick="toggleFavorite(${recipe.id}, event)">
+                                <span class="favorite-icon">${recipe.isFavorite ? '💖' : '♡'}</span>
+                            </div>
+                            
+                            <div class="recipe-photo">
+                                <!-- Фото без смайлика -->
+                            </div>
+                            <div class="recipe-content">
+                                <div class="recipe-name">${escapeHtml(recipe.name)}</div>
+                                
+                                <div class="recipe-categories">
+                                    ${recipe.categories.map(cat => `
+                                        <span class="category-tag">${escapeHtml(cat)}</span>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="recipe-info-row calories-row">
+                                    <span class="info-label">Калории</span>
+                                    <span class="info-value">${recipe.calories} ккал</span>
+                                </div>
+                                
+                                <div class="recipe-info-row time-row">
+                                    <span class="info-label">Время готовки</span>
+                                    <span class="info-value">${recipe.cookingTime} мин</span>
+                                </div>
+                                
+                                <div class="recipe-info-row author-row">
+                                    <span class="info-label">Автор</span>
+                                    <span class="info-value">${escapeHtml(recipe.author)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Автоматическое расширение main-container
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.style.height = 'auto';
+                mainContainer.style.minHeight = '500px';
+            }
+        }
+        
+        // ========== ФУНКЦИЯ ДЛЯ ЗАЩИТЫ ОТ XSS ==========
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        
+        // ========== ФИЛЬТРАЦИЯ И СОРТИРОВКА ==========
+        function filterAndSortRecipes() {
+            let filtered = [...allRecipes];
+            
+            if (currentSearch.trim() !== '') {
+                const searchLower = currentSearch.toLowerCase();
+                filtered = filtered.filter(recipe => 
+                    recipe.name.toLowerCase().includes(searchLower) ||
+                    recipe.author.toLowerCase().includes(searchLower) ||
+                    recipe.categories.some(cat => cat.toLowerCase().includes(searchLower))
+                );
+            }
+            
+            if (currentSort === 'time_asc') {
+                filtered.sort((a, b) => a.cookingTime - b.cookingTime);
+            } else if (currentSort === 'time_desc') {
+                filtered.sort((a, b) => b.cookingTime - a.cookingTime);
+            } else if (currentSort === 'name_asc') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (currentSort === 'calories_asc') {
+                filtered.sort((a, b) => a.calories - b.calories);
+            } else if (currentSort === 'favorite_first') {
+                filtered.sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
+            }
+            
+            displayRecipes(filtered);
+        }
+        
+        // ========== ОБНОВЛЕНИЕ ФИЛЬТРОВ ==========
+        function updateFilters() {
+            currentSort = document.getElementById('sortFilter').value;
+            currentSearch = document.getElementById('searchInput').value;
+            filterAndSortRecipes();
+        }
+        
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.style.height = 'auto';
+                mainContainer.style.minHeight = '500px';
+            }
+            
+            loadRecipesFromBackend();
+            
+            const sortSelect = document.getElementById('sortFilter');
+            const searchInput = document.getElementById('searchInput');
+            
+            if (sortSelect) {
+                sortSelect.addEventListener('change', updateFilters);
+            }
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', updateFilters);
+            }
+            
+            // Добавляем обработчик для кнопки "Рецепт дня"
+            const recipeDayBtn = document.getElementById('recipeOfTheDayBtn');
+            if (recipeDayBtn) {
+                recipeDayBtn.addEventListener('click', goToRandomRecipe);
+            }
+        });
+    </script>
+</body>
+</html>

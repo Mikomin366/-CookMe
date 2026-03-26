@@ -1,0 +1,249 @@
+/*1*/
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр рецепта</title>
+    <link rel="stylesheet" href="css/information.css">
+</head>
+<body>
+    <header>
+       <div class="logo">
+            <a href="main.html" class="logo"><img src="/images/Logo.png" alt="Logo"></a>
+        </div>
+        <div class="profile-icon" id="profileIcon">
+            <img src="images/Ellipse 21.png" class="profile-img" alt="Profile">
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">Профиль</a>
+                <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
+                <button class="dropdown-item" id="logoutBtn">Выйти</button>
+            </div>
+        </div> 
+    </header>
+    
+    <h1 class="tl">Просмотр рецепта</h1>
+    
+    <main class="information-container">
+        <div class="image-wrapper">
+            <div class="image-label">Блюдо</div>
+            <div class="recipe-image-box" id="imageBox">
+                <img src="images/default-recipe.jpg" alt="Рецепт" id="recipeImage">
+            </div>
+            <div class="ingredients-wrapper">
+                <div class="form-field ingredients-field">
+                    <label>Ингредиенты</label>
+                    <div id="ingredientsList" class="ingredients-list"></div>
+                </div>
+            </div>
+            <div class="steps-section">
+                <div class="steps-header">
+                    <label>Пошаговый рецепт</label>
+                </div>
+                <div id="stepsContainer" class="steps-list"></div>
+            </div>
+        </div>
+        
+        <div class="recipe-form-fields">
+            <div class="form-field">
+                <label>Название рецепта</label>
+                <input type="text" id="recipeName" placeholder="Название рецепта" readonly disabled>
+            </div>
+            
+            <div class="form-field">
+                <label>Категории</label>
+                <div class="categories-input">
+                    <input type="text" id="category1" placeholder="Категория 1" readonly disabled>
+                    <input type="text" id="category2" placeholder="Категория 2" readonly disabled>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label>Время готовки (мин.)</label>
+                <input type="number" id="cookingTime" placeholder="Время готовки" readonly disabled>
+            </div>
+            
+            <div class="form-field">
+                <label>Калории</label>
+                <input type="number" id="calories" placeholder="Количество калорий" readonly disabled>
+            </div>
+            
+            <div class="form-field">
+                <label>Краткое описание</label>
+                <textarea id="description" placeholder="Описание рецепта" readonly disabled></textarea>
+            </div>
+            
+            <div class="button-container">
+                <button class="action-button edit-button" id="editRecipeButton">Редактировать</button>
+                <button class="action-button chef-button" id="chefModeButton">Режим шеф-повара</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const ingredientsList = document.getElementById('ingredientsList');
+        const stepsContainer = document.getElementById('stepsContainer');
+        
+        // Данные для примера (в реальном приложении будут загружаться с сервера)
+        const recipeData = {
+            id: 1,
+            name: "Классический борщ",
+            category1: "Супы",
+            category2: "Украинская кухня",
+            cookingTime: 90,
+            calories: 250,
+            description: "Наваристый борщ с мясом и свеклой",
+            ingredients: [
+                "Свекла - 2 шт",
+                "Капуста - 300 г",
+                "Картофель - 4 шт",
+                "Морковь - 1 шт",
+                "Лук - 1 шт",
+                "Говядина - 500 г"
+            ],
+            steps: [
+                { text: "Сварить бульон из говядины", time: 60 },
+                { text: "Нарезать и обжарить овощи", time: 15 },
+                { text: "Добавить свеклу и тушить", time: 10 },
+                { text: "Соединить с бульоном, добавить капусту", time: 20 },
+                { text: "Варить до готовности", time: 15 }
+            ],
+            image: "images/borscht.jpg"
+        };
+        
+        function renderIngredients() {
+            if (!ingredientsList) return;
+            
+            if (!recipeData.ingredients || recipeData.ingredients.length === 0) {
+                ingredientsList.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+                return;
+            }
+            
+            ingredientsList.innerHTML = recipeData.ingredients.map((ingredient, idx) => `
+                <div class="ingredient-item" data-ingredient-id="${idx}">
+                    <span class="ingredient-text">${escapeHtml(ingredient)}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderSteps() {
+            if (!stepsContainer) return;
+            
+            if (!recipeData.steps || recipeData.steps.length === 0) {
+                stepsContainer.innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
+                return;
+            }
+            
+            stepsContainer.innerHTML = recipeData.steps.map((step, idx) => `
+                <div class="step-item" data-step-id="${idx}">
+                    <div class="step-number">${idx + 1}</div>
+                    <div class="step-content">
+                        <div class="step-text-display">${escapeHtml(step.text)}</div>
+                        <div class="step-time-wrapper">
+                            <span class="step-time-value">${step.time || 0}</span>
+                            <span class="step-time-label">мин.</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadRecipeData() {
+            // Заполняем поля формы
+            document.getElementById('recipeName').value = recipeData.name || '';
+            document.getElementById('category1').value = recipeData.category1 || '';
+            document.getElementById('category2').value = recipeData.category2 || '';
+            document.getElementById('cookingTime').value = recipeData.cookingTime || '';
+            document.getElementById('calories').value = recipeData.calories || '';
+            document.getElementById('description').value = recipeData.description || '';
+            
+            // Загружаем изображение
+            const recipeImage = document.getElementById('recipeImage');
+            if (recipeData.image) {
+                recipeImage.src = recipeData.image;
+                recipeImage.style.display = 'block';
+            } else {
+                recipeImage.style.display = 'none';
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder';
+                placeholder.textContent = 'Изображение отсутствует';
+                document.getElementById('imageBox').appendChild(placeholder);
+            }
+            
+            // Рендерим ингредиенты и шаги
+            renderIngredients();
+            renderSteps();
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        
+        // Выпадающее меню профиля
+        const profileIcon = document.getElementById('profileIcon');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (profileIcon) {
+            profileIcon.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+        }
+        
+        document.addEventListener('click', () => {
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
+        });
+        
+        if (dropdownMenu) {
+            dropdownMenu.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+        }
+        
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener('click', () => {
+                window.location.href = 'profile.html';
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('userSession');
+                sessionStorage.removeItem('userSession');
+                window.location.href = 'enter.html';
+            });
+        }
+        
+        // Кнопки действий
+        const editRecipeButton = document.getElementById('editRecipeButton');
+        const chefModeButton = document.getElementById('chefModeButton');
+        
+        if (editRecipeButton) {
+            editRecipeButton.addEventListener('click', () => {
+                // Сохраняем ID рецепта в localStorage для загрузки на странице редактирования
+                localStorage.setItem('currentRecipeId', recipeData.id);
+                window.location.href = 'edit-recipe.html';
+            });
+        }
+        
+        if (chefModeButton) {
+            chefModeButton.addEventListener('click', () => {
+                // Сохраняем данные рецепта для режима шеф-повара
+                localStorage.setItem('chefRecipeData', JSON.stringify(recipeData));
+                window.location.href = 'chef.html';
+            });
+        }
+        
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadRecipeData);
+    </script>
+</body>
+</html>

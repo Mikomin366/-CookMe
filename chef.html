@@ -1,0 +1,42 @@
+/*1*/
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Режим шеф-повара</title>
+    <link rel="stylesheet" href="css/chef.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="main.html" class="logo"><img src="/images/Logo.png" alt="Логотип"></a>
+        </div>
+        <div class="auth-buttons">
+            <a href="enter.html" class="enter-button">Войти</a>
+            <a href="register.html" class="register-button">Зарегистрироваться</a>
+        </div>   
+    </header>
+    
+    <h1 class="tl">Режим шеф-повара</h1>
+    
+    <main class="chef-container">
+        <div class="step-container">
+            <div class="step-title-wrapper">
+                <div class="step-title">Текущий шаг</div>
+            </div>
+            <div class="step-timer" id="stepTimer">
+                <span class="timer-label">Таймер:</span>
+                <span class="timer-value" id="timerValue"></span>
+                <span class="timer-unit">мин</span>
+            </div>
+            <div class="step-number" id="stepNumber"></div>
+            <div class="step-content-wrapper">
+                <button class="step-arrow prev-arrow" id="prevButton">◀</button>
+                <div class="step-text" id="stepText"></div>
+                <button class="step-arrow next-arrow" id="nextButton">▶</button>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

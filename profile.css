@@ -1,0 +1,228 @@
+/*1*/
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 110px;
+    padding-right: 110px;
+    padding-top: 54px;
+    padding-bottom: 61px;
+    box-sizing: border-box;
+}
+
+
+.logo {
+    margin-left: -20px;
+}
+
+
+.auth-buttons {
+    margin-left: auto;
+    margin-right: -100px;
+
+
+}
+.enter-button {
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+
+
+    margin-right: 12px;    
+}
+.register-button {
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    margin-right: 12px;
+}
+
+
+body {
+    background-color: #FFF3E0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.profile-container {
+    width: 1600px;
+    height: 800px;
+    background: #FFF8EE;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    margin-left: 110px;
+    margin-right: 110px;
+    margin-bottom: 105px;
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-bottom: 81px;
+}
+.username {
+    font-size: 40px;
+    font-weight: 600;
+    color: #9B5E2E;
+    margin-bottom: 56px;
+    margin-top: 59px;
+    margin-left: -1400px;
+}
+.recipes-c {
+    font-size: 40px;
+    color: #9B5E2E;
+
+}
+
+/* Иконка */
+
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    margin-right: 10px;
+    position: relative;
+}
+
+.profile-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    position: relative;
+}
+
+.add-recipe-button {
+    width: 450px;
+    margin-right: 400px;
+    height: 88px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 12px 28px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.export-button {
+    width: 175px;
+    height: 88px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 12px 28px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.add-recipe-button:hover, .export-button:hover {
+    background-color: #b1d29b;
+}
+
+/* Измените в CSS файле */
+
+.recipes-header {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.recipes-c {
+    font-size: 40px;
+    color: #9B5E2E;
+    margin: 0;
+}
+
+.favorite-button {
+    width: 165px;
+    height: 45px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 8px 4px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-left: 20px;
+}
+
+
+/* Модальное окно + выпадающее меню у профиля */
+
+/* Измените стили для выпадающего меню */
+
+.dropdown-menu {
+    position: absolute;
+    top: 75px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 180px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 16px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.dropdown-item:first-child {
+    border-radius: 13px 13px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 13px 13px;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
+}
+
+.favorite-button.active {
+    background-color: #9B5E2E;
+    color: #FFF8EE;
+    border-color: #9B5E2E;
+}
+
+.favorite-status {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    color: #9B5E2E;
+    background: #FFF8EE;
+    border: 1px solid #9B5E2E;
+    border-radius: 10px;
+}

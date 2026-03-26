@@ -1,0 +1,263 @@
+/*1*/
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 110px;
+    padding-right: 110px;
+    padding-top: 54px;
+    padding-bottom: 61px;
+    box-sizing: border-box;
+}
+
+.logo {
+    margin-left: -20px;
+}
+
+.auth-buttons {
+    margin-left: auto;
+    margin-right: -100px;
+
+}
+.enter-button {
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+
+    margin-right: 12px;    
+}
+.register-button {
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+
+
+    margin-right: 12px;
+}
+
+body {
+    background-color: #FFF3E0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.registration-container {
+    width: 1600px;
+    height: 800px;
+    background: #FFF8EE;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    margin-left: 110px;
+    margin-right: 110px;
+    margin-bottom: 105px;
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-bottom: 81px;
+}
+h1 {
+    font-size: 40px;
+    font-weight: 600;
+    color: #9B5E2E;
+    margin-bottom: 56px;
+    margin-top: 59px;
+}
+.registration-form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+.input-container {
+    display: flex;
+    background-color: white;
+    flex-direction: column;
+    width: 1000px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    padding-left: 57px;
+    padding-top: 32px;
+    padding-bottom: 32px;
+}
+.input-container input {
+    font-size: 30px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #9B5E2E;
+}
+
+.input-container input::placeholder {
+    color: #9B5E2E;
+}
+
+.registration-button {
+    background-color: #C5E0B4;
+    width: 420px;
+    height: 100px;
+    color: #9B5E2E;
+    font-size: 30px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+
+
+/* Доп стили */
+
+.error-message {
+    display: none;
+    color: #D46B3A;
+    font-size: 16px;
+    margin-top: 20px;
+    text-align: center;
+    padding: 12px;
+    background: #FFF3E0;
+    border-radius: 10px;
+    border: 1px solid #D46B3A;
+}
+        
+.success-message {
+    display: none;
+    color: #5A8F4C;
+    font-size: 16px;
+    margin-top: 20px;
+    text-align: center;
+    padding: 12px;
+    background: #FFF3E0;
+    border-radius: 20px;
+    border: 1px solid #5A8F4C;
+}
+        
+
+
+/* ===== АДАПТИВНОСТЬ ===== */
+
+@media (max-width: 1200px) {
+    header {
+        padding-left: 50px;
+        padding-right: 50px;
+    }
+    .auth-buttons {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        justify-content: space-between;
+    }
+    
+    .logo {
+        margin-left: 0;
+    }
+    
+    .logo img {
+        max-width: 70px;
+        height: auto;
+    }
+    
+    .auth-buttons {
+        margin-left: 0;
+        gap: 8px;
+    }
+    
+    .enter-button, 
+    .register-button {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-width: 2px;
+        border-radius: 15px;
+    }
+    
+    .registration-container {
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 40px;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 30px;
+        padding-bottom: 40px;
+    }
+    
+    h1 {
+        font-size: 28px;
+        margin-bottom: 30px;
+        margin-top: 0;
+        text-align: center;
+    }
+    
+    .registration-form {
+        gap: 20px;
+    }
+    
+    .input-container {
+        padding-left: 20px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+    
+    .input-container input {
+        font-size: 18px;
+    }
+    
+    .registration-button {
+        width: 100%;
+        height: 55px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        max-width: 60px;
+    }
+    
+    .enter-button, 
+    .register-button {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+    
+    .registration-container {
+        width: 95%;
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-top: 25px;
+        padding-bottom: 30px;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin-bottom: 25px;
+    }
+    
+    .input-container {
+        padding-left: 15px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    
+    .input-container input {
+        font-size: 16px;
+    }
+    
+    .registration-button {
+        height: 50px;
+        font-size: 16px;
+    }
+}
