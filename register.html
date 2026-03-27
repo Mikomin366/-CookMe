@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,7 +6,9 @@
     <title>Регистрация</title>
     <link rel="stylesheet" href="css/register.css">
 </head>
-<body>  <div class="logo">
+<body>
+    <header>
+        <div class="logo">
             <a href="main.html" class="logo"><img src="/images/Logo.png" alt="Логотип"></a>
         </div>
         <div class="auth-buttons">
@@ -36,8 +37,7 @@
     </main>
 
     <script>
-        // URL для отправки данных на бэкенд
-        const API_URL = '/api/register';
+        const API_BASE_URL = 'http://localhost:8000/api';
         
         // Получаем элементы формы
         const registerForm = document.getElementById('registerForm');
@@ -69,7 +69,7 @@
             successMessageDiv.style.display = 'block';
         }
         
-        // Проверка валидности данных (без alert)
+        // Проверка валидности данных
         function validateForm() {
             const login = loginInput.value.trim();
             const password = passwordInput.value.trim();
@@ -112,28 +112,23 @@
             }
         }
         
-        // Сохранение сессии после регистрации
+        // Сохранение сессии после регистрации (с authToken и userId)
         function saveSession(userData) {
-            const sessionData = {
-                userId: userData.id,
-                login: userData.login,
-                token: userData.token || 'session_' + Date.now(),
-                timestamp: Date.now()
-            };
-            localStorage.setItem('userSession', JSON.stringify(sessionData));
+            localStorage.setItem('authToken', userData.token);
+            localStorage.setItem('userId', userData.id);
         }
         
         // Отправка данных на бэкенд
         async function registerUser(login, password) {
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(`${API_BASE_URL}/register/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        login: login,
+                        username: login,
                         password: password
                     })
                 });

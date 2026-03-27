@@ -6,7 +6,105 @@
     <title>Просмотр рецепта</title>
     <link rel="stylesheet" href="css/information.css">
     <style>
-        /* Стили для модального окна редактирования профиля */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5A8F4C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification-error {
+            background-color: #D46B3A;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(155, 94, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: #9B5E2E;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .favorite-btn {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .favorite-icon {
+            font-size: 24px;
+        }
+        
+        /* Стили для иконки профиля */
+        .profile-icon {
+            margin-left: auto;
+            cursor: pointer;
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+        
+        .profile-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #9B5E2E;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: white;
+            border: 2px solid #9B5E2E;
+            border-radius: 15px;
+            min-width: 150px;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #9B5E2E;
+            font-size: 14px;
+            background: white;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #F7EDE1;
+        }
+        
+        /* Стили для модального окна */
         .profile-modal-overlay {
             position: fixed;
             top: 0;
@@ -160,34 +258,6 @@
         .profile-modal-btn-save:hover {
             background-color: #b1d29b;
         }
-        
-        /* Кнопка внизу */
-        .button-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 30px;
-            width: 100%;
-        }
-        
-        .action-button {
-            width: 320px;
-            height: 100px;
-            background-color: #C5E0B4;
-            border: 3px solid #9B5E2E;
-            border-radius: 20px;
-            padding: 12px 20px;
-            font-size: 28px;
-            color: #9B5E2E;
-            cursor: pointer;
-            text-align: center;
-            font-family: inherit;
-        }
-        
-        .action-button:hover {
-            background-color: #b1d29b;
-        }
     </style>
 </head>
 <body>
@@ -195,14 +265,22 @@
        <div class="logo">
             <a href="main.html" class="logo"><img src="/images/Logo.png"></a>
         </div>
-        <div class="profile-icon" id="profileIcon">
+        
+        <!-- Кнопки авторизации (показываются для гостей) -->
+        <div class="auth-buttons" id="authButtons">
+            <a href="enter.html" class="enter-button">Войти</a>
+            <a href="register.html" class="register-button">Зарегистрироваться</a>
+        </div>
+        
+        <!-- Иконка профиля (показывается для авторизованных) -->
+        <div class="profile-icon" id="profileIcon" style="display: none;">
             <img src="images/Ellipse 21.png" class="profile-img" id="profileAvatar">
             <div class="dropdown-menu" id="dropdownMenu">
                 <a href="profile.html" class="dropdown-item">Профиль</a>
-                <button class="dropdown-item" id="editProfileInDropdownBtn">Редактировать</button>
-                <button class="dropdown-item" id="logoutBtn">Выйти</button>
+                <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
+                <button class="dropdown-item" id="logoutBtnInfo">Выйти</button>
             </div>
-        </div> 
+        </div>
     </header>
     
     <h1 class="tl">Просмотр рецепта</h1>
@@ -224,27 +302,27 @@
         <div class="recipe-form-fields">
             <div class="form-field">
                 <label>Название рецепта</label>
-                <div class="field-value" id="recipeName">Классический борщ</div>
+                <div class="field-value" id="recipeName">Загрузка...</div>
             </div>
             
             <div class="form-field">
                 <label>Категории</label>
-                <div class="field-value" id="categories">Супы, Украинская кухня</div>
+                <div class="field-value" id="categories">Загрузка...</div>
             </div>
             
             <div class="form-field">
                 <label>Время готовки (мин.)</label>
-                <div class="field-value" id="cookingTime">90 мин.</div>
+                <div class="field-value" id="cookingTime">Загрузка...</div>
             </div>
             
             <div class="form-field">
                 <label>Калории</label>
-                <div class="field-value" id="calories">250 ккал</div>
+                <div class="field-value" id="calories">Загрузка...</div>
             </div>
             
             <div class="form-field">
                 <label>Краткое описание</label>
-                <div class="field-value" id="description">Наваристый борщ с мясом и свеклой</div>
+                <div class="field-value" id="description">Загрузка...</div>
             </div>
             
             <div class="steps-section">
@@ -255,13 +333,13 @@
             </div>
             
             <div class="button-container">
-                <button class="action-button edit-button" id="editProfileButton">Редактировать</button>
-                <button class="action-button chef-button" id="chefModeButton">Режим шеф-повара</button>
+                <button class="action-button edit-button" id="editButton">Редактировать</button>
+                <button class="action-button chef-button" id="chefButton">Режим шеф-повара</button>
             </div>
         </div>
     </main>
 
-    <!-- Модальное окно для редактирования профиля (вызывается из выпадающего меню) -->
+    <!-- Модальное окно для редактирования профиля -->
     <div class="profile-modal-overlay" id="editProfileModal">
         <div class="profile-modal-container">
             <div class="profile-modal-header">
@@ -295,47 +373,293 @@
     </div>
 
     <script>
-        // Данные рецепта с полной информацией по ингредиентам (название, количество, единица измерения)
-        const recipeData = {
-            id: 1,
-            name: "Классический борщ",
-            category1: "Супы",
-            category2: "Украинская кухня",
-            cookingTime: 90,
-            calories: 250,
-            description: "Наваристый борщ с мясом и свеклой",
-            ingredients: [
-                { name: "Свекла", quantity: "2", unit: "шт" },
-                { name: "Капуста", quantity: "300", unit: "г" },
-                { name: "Картофель", quantity: "4", unit: "шт" },
-                { name: "Морковь", quantity: "1", unit: "шт" },
-                { name: "Лук", quantity: "1", unit: "шт" },
-                { name: "Говядина", quantity: "500", unit: "г" },
-                { name: "Томатная паста", quantity: "2", unit: "ст.л." },
-                { name: "Чеснок", quantity: "2", unit: "зубчика" },
-                { name: "Зелень", quantity: "по вкусу", unit: "" }
-            ],
-            steps: [
-                { text: "Сварить бульон из говядины. Варить 1.5 часа, снимая пену.", time: 90 },
-                { text: "Нарезать лук, морковь, свеклу соломкой. Обжарить на сковороде с томатной пастой.", time: 10 },
-                { text: "Картофель нарезать кубиками, добавить в бульон.", time: 5 },
-                { text: "Добавить зажарку в бульон, варить 10 минут.", time: 10 },
-                { text: "Нашинковать капусту, добавить в суп. Варить до готовности.", time: 15 },
-                { text: "Добавить измельченный чеснок и зелень. Дать настояться.", time: 5 }
-            ],
-            image: null
-        };
+        const API_BASE_URL = 'http://localhost:8000/api';
         
-        const stepsContainer = document.getElementById('stepsContainer');
-        const ingredientsList = document.getElementById('ingredientsList');
+        let currentRecipe = null;
+        let currentAvatarUrl = 'images/Ellipse 21.png';
+        let tempAvatarFile = null;
         
-        function renderSteps() {
-            if (!stepsContainer) return;
-            if (!recipeData.steps || recipeData.steps.length === 0) {
-                stepsContainer.innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
+        // ========== ФУНКЦИИ АВТОРИЗАЦИИ ==========
+        function getToken() {
+            return localStorage.getItem('authToken');
+        }
+        
+        function getUserId() {
+            return localStorage.getItem('userId');
+        }
+        
+        function isAuthenticated() {
+            return !!getToken();
+        }
+        
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            if (isError) {
+                notification.classList.add('notification-error');
+            }
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // ========== УПРАВЛЕНИЕ ИКОНКОЙ ПРОФИЛЯ ==========
+        function updateAuthUI() {
+            const authButtons = document.getElementById('authButtons');
+            const profileIcon = document.getElementById('profileIcon');
+            const editButton = document.getElementById('editButton');
+            const isLoggedIn = isAuthenticated();
+            
+            if (isLoggedIn) {
+                authButtons.style.display = 'none';
+                profileIcon.style.display = 'block';
+                loadProfileAvatar();
+                
+                if (editButton) editButton.style.display = 'block';
+            } else {
+                authButtons.style.display = 'flex';
+                profileIcon.style.display = 'none';
+                
+                if (editButton) editButton.style.display = 'none';
+            }
+        }
+        
+        async function loadProfileAvatar() {
+            try {
+                const token = getToken();
+                const userId = getUserId();
+                if (!token || !userId) return;
+                
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.avatar) {
+                        currentAvatarUrl = user.avatar;
+                        document.getElementById('profileAvatar').src = currentAvatarUrl;
+                        document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки аватара:', error);
+            }
+        }
+        
+        function initProfileDropdown() {
+            const profileIcon = document.getElementById('profileIcon');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            if (profileIcon) {
+                profileIcon.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+            }
+            
+            document.addEventListener('click', () => {
+                if (dropdownMenu) dropdownMenu.classList.remove('show');
+            });
+            
+            if (dropdownMenu) {
+                dropdownMenu.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                });
+            }
+            
+            const logoutBtn = document.getElementById('logoutBtnInfo');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userId');
+                    window.location.href = 'main.html';
+                });
+            }
+            
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.remove('show');
+                    openModal();
+                });
+            }
+        }
+        
+        // ========== МОДАЛЬНОЕ ОКНО ==========
+        const modal = document.getElementById('editProfileModal');
+        
+        function openModal() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+            tempAvatarFile = null;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            tempAvatarFile = null;
+        }
+        
+        async function saveProfile() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const hasPasswordChange = !!newPassword;
+            const hasAvatarChange = !!tempAvatarFile;
+            
+            if (!hasPasswordChange && !hasAvatarChange) {
+                closeModal();
                 return;
             }
-            stepsContainer.innerHTML = recipeData.steps.map((step, idx) => `
+            
+            if (hasPasswordChange) {
+                if (!currentPassword) {
+                    showNotification('Введите текущий пароль', true);
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    showNotification('Пароли не совпадают', true);
+                    return;
+                }
+                if (newPassword.length < 4) {
+                    showNotification('Минимум 4 символа', true);
+                    return;
+                }
+            }
+            
+            const saveBtn = document.getElementById('saveProfileBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
+            
+            try {
+                if (hasPasswordChange) {
+                    await apiCall(`/users/${getUserId()}/change-password/`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            new_password: newPassword
+                        })
+                    });
+                    showNotification('Пароль изменен');
+                }
+                
+                if (hasAvatarChange) {
+                    const formData = new FormData();
+                    formData.append('avatar', tempAvatarFile);
+                    
+                    const response = await fetch(`${API_BASE_URL}/users/${getUserId()}/upload-avatar/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    currentAvatarUrl = data.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatarUrl;
+                    document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                    showNotification('Аватар обновлен');
+                }
+                
+                closeModal();
+                
+            } catch (error) {
+                showNotification(error.message, true);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Сохранить';
+            }
+        }
+        
+        // Загрузка аватара в модальном окне
+        document.getElementById('uploadAvatarBtn').onclick = () => document.getElementById('avatarUpload').click();
+        document.getElementById('avatarUpload').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file && file.size <= 5 * 1024 * 1024) {
+                tempAvatarFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    document.getElementById('modalAvatarPreview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                showNotification('Файл больше 5MB', true);
+            }
+        };
+        
+        // Обработчики модального окна
+        document.getElementById('closeProfileModalBtn').onclick = closeModal;
+        document.getElementById('cancelProfileModalBtn').onclick = closeModal;
+        document.getElementById('saveProfileBtn').onclick = saveProfile;
+        modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+        
+        // ========== API ЗАПРОСЫ ==========
+        async function apiCall(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                ...options,
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Ошибка запроса' }));
+                throw new Error(error.message || 'Ошибка сервера');
+            }
+            
+            return response.json();
+        }
+        
+        function getRecipeId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        
+        function renderIngredients(ingredients) {
+            const container = document.getElementById('ingredientsList');
+            if (!container) return;
+            
+            if (!ingredients || ingredients.length === 0) {
+                container.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+                return;
+            }
+            
+            container.innerHTML = ingredients.map(ing => {
+                let text = ing.name;
+                if (ing.quantity && ing.quantity.trim()) {
+                    text += ` - ${ing.quantity}`;
+                    if (ing.unit && ing.unit.trim()) {
+                        text += ` ${ing.unit}`;
+                    }
+                }
+                return `<div class="ingredient-item"><span class="ingredient-text">${escapeHtml(text)}</span></div>`;
+            }).join('');
+        }
+        
+        function renderSteps(steps) {
+            const container = document.getElementById('stepsContainer');
+            if (!container) return;
+            
+            if (!steps || steps.length === 0) {
+                container.innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
+                return;
+            }
+            
+            container.innerHTML = steps.map((step, idx) => `
                 <div class="step-item">
                     <div class="step-number">${idx + 1}</div>
                     <div class="step-content">
@@ -349,242 +673,90 @@
             `).join('');
         }
         
-        function renderIngredients() {
-            if (!ingredientsList) return;
+        function displayRecipe(recipe) {
+            document.getElementById('recipeName').textContent = recipe.name || 'Без названия';
             
-            if (!recipeData.ingredients || recipeData.ingredients.length === 0) {
-                ingredientsList.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+            const categories = [];
+            if (recipe.category1) categories.push(recipe.category1);
+            if (recipe.category2) categories.push(recipe.category2);
+            document.getElementById('categories').textContent = categories.join(', ') || 'Не указано';
+            document.getElementById('cookingTime').textContent = recipe.cooking_time ? `${recipe.cooking_time} мин.` : 'Не указано';
+            document.getElementById('calories').textContent = recipe.calories ? `${recipe.calories} ккал` : 'Не указано';
+            document.getElementById('description').textContent = recipe.description || 'Описание отсутствует';
+            
+            renderIngredients(recipe.ingredients);
+            renderSteps(recipe.steps);
+            
+            if (recipe.image) {
+                const imageBox = document.getElementById('imageBox');
+                imageBox.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = recipe.image;
+                imageBox.appendChild(img);
+            }
+        }
+        
+        async function loadRecipe() {
+            const recipeId = getRecipeId();
+            
+            if (!recipeId) {
+                showNotification('Рецепт не найден');
+                displayEmptyRecipe();
                 return;
             }
             
-            // Формируем полную строку ингредиента: Название - Количество Единица
-            ingredientsList.innerHTML = recipeData.ingredients.map(ingredient => {
-                let ingredientText = ingredient.name;
-                if (ingredient.quantity && ingredient.quantity.trim()) {
-                    ingredientText += ` - ${ingredient.quantity}`;
-                    if (ingredient.unit && ingredient.unit.trim()) {
-                        ingredientText += ` ${ingredient.unit}`;
-                    }
+            try {
+                const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/`);
+                
+                if (!response.ok) {
+                    throw new Error('Рецепт не найден');
                 }
-                return `
-                    <div class="ingredient-item">
-                        <span class="ingredient-text">${escapeHtml(ingredientText)}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function loadRecipeData() {
-            document.getElementById('recipeName').textContent = recipeData.name || '';
-            const categories = [];
-            if (recipeData.category1) categories.push(recipeData.category1);
-            if (recipeData.category2) categories.push(recipeData.category2);
-            document.getElementById('categories').textContent = categories.join(', ') || 'Не указано';
-            document.getElementById('cookingTime').textContent = recipeData.cookingTime ? `${recipeData.cookingTime} мин.` : 'Не указано';
-            document.getElementById('calories').textContent = recipeData.calories ? `${recipeData.calories} ккал` : 'Не указано';
-            document.getElementById('description').textContent = recipeData.description || 'Описание отсутствует';
-            renderIngredients();
-            renderSteps();
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        }
-        
-        // ========== УПРАВЛЕНИЕ АВАТАРОМ ==========
-        let currentAvatarUrl = localStorage.getItem('userAvatar') || 'images/Ellipse 21.png';
-        
-        function updateAvatarDisplay() {
-            const profileAvatar = document.getElementById('profileAvatar');
-            const modalAvatarPreview = document.getElementById('modalAvatarPreview');
-            if (profileAvatar) profileAvatar.src = currentAvatarUrl;
-            if (modalAvatarPreview) modalAvatarPreview.src = currentAvatarUrl;
-        }
-        
-        // ========== МОДАЛЬНОЕ ОКНО ДЛЯ СМЕНЫ ПАРОЛЯ ==========
-        const profileModal = document.getElementById('editProfileModal');
-        const editProfileInDropdownBtn = document.getElementById('editProfileInDropdownBtn');
-        const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
-        const cancelProfileModalBtn = document.getElementById('cancelProfileModalBtn');
-        const saveProfileBtn = document.getElementById('saveProfileBtn');
-        const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
-        const avatarUpload = document.getElementById('avatarUpload');
-        const modalAvatarPreview = document.getElementById('modalAvatarPreview');
-        
-        let tempAvatarUrl = currentAvatarUrl;
-        
-        function loadProfileData() {
-            const currentPasswordInput = document.getElementById('currentPassword');
-            const newPasswordInput = document.getElementById('newPassword');
-            const confirmPasswordInput = document.getElementById('confirmPassword');
-            if (currentPasswordInput) currentPasswordInput.value = '';
-            if (newPasswordInput) newPasswordInput.value = '';
-            if (confirmPasswordInput) confirmPasswordInput.value = '';
-            tempAvatarUrl = currentAvatarUrl;
-            if (modalAvatarPreview) modalAvatarPreview.src = tempAvatarUrl;
-        }
-        
-        function saveProfileData() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (!currentPassword) {
-                alert('Введите текущий пароль');
-                return false;
+                
+                const recipe = await response.json();
+                currentRecipe = recipe;
+                displayRecipe(recipe);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                showNotification(error.message);
+                displayEmptyRecipe();
             }
-            if (!newPassword) {
-                alert('Введите новый пароль');
-                return false;
+        }
+        
+        function displayEmptyRecipe() {
+            document.getElementById('recipeName').textContent = 'Рецепт не найден';
+            document.getElementById('categories').textContent = '—';
+            document.getElementById('cookingTime').textContent = '—';
+            document.getElementById('calories').textContent = '—';
+            document.getElementById('description').textContent = 'Рецепт не найден. Проверьте правильность ссылки.';
+            document.getElementById('ingredientsList').innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+            document.getElementById('stepsContainer').innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
+        }
+        
+        document.getElementById('editButton').addEventListener('click', () => {
+            const recipeId = getRecipeId();
+            if (recipeId) {
+                window.location.href = `edit-recipe.html?id=${recipeId}`;
+            } else {
+                showNotification('Ошибка: рецепт не найден');
             }
-            if (newPassword.length < 4) {
-                alert('Новый пароль должен содержать не менее 4 символов');
-                return false;
-            }
-            if (newPassword !== confirmPassword) {
-                alert('Новый пароль и подтверждение не совпадают');
-                return false;
-            }
-            
-            // Здесь должен быть запрос к серверу для проверки текущего пароля и смены пароля
-            localStorage.setItem('userPassword', newPassword);
-            
-            if (tempAvatarUrl) {
-                currentAvatarUrl = tempAvatarUrl;
-                localStorage.setItem('userAvatar', currentAvatarUrl);
-                updateAvatarDisplay();
-            }
-            
-            return true;
-        }
+        });
         
-        function openProfileModal() {
-            loadProfileData();
-            profileModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeProfileModal() {
-            profileModal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-        
-        if (editProfileInDropdownBtn) {
-            editProfileInDropdownBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const dropdownMenu = document.getElementById('dropdownMenu');
-                if (dropdownMenu) dropdownMenu.classList.remove('show');
-                openProfileModal();
-            });
-        }
-        
-        if (closeProfileModalBtn) closeProfileModalBtn.addEventListener('click', closeProfileModal);
-        if (cancelProfileModalBtn) cancelProfileModalBtn.addEventListener('click', closeProfileModal);
-        
-        if (saveProfileBtn) {
-            saveProfileBtn.addEventListener('click', () => {
-                if (saveProfileData()) {
-                    closeProfileModal();
-                    showNotification('Пароль успешно изменен!');
-                }
-            });
-        }
-        
-        if (profileModal) {
-            profileModal.addEventListener('click', (e) => {
-                if (e.target === profileModal) closeProfileModal();
-            });
-        }
-        
-        // Загрузка аватара
-        if (uploadAvatarBtn) {
-            uploadAvatarBtn.addEventListener('click', () => {
-                avatarUpload.click();
-            });
-        }
-        
-        if (avatarUpload) {
-            avatarUpload.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        tempAvatarUrl = event.target.result;
-                        if (modalAvatarPreview) modalAvatarPreview.src = tempAvatarUrl;
-                    };
-                    reader.readAsDataURL(file);
-                } else if (file) {
-                    alert('Пожалуйста, выберите изображение');
-                }
-            });
-        }
-        
-        // ========== КНОПКА "РЕДАКТИРОВАТЬ" ВНИЗУ - ПЕРЕХОД НА PROFILE.HTML ==========
-        const editProfileButton = document.getElementById('editProfileButton');
-        if (editProfileButton) {
-            editProfileButton.addEventListener('click', () => {
-                window.location.href = 'edit-recipe.html';
-            });
-        }
-        
-        // ========== КНОПКА "РЕЖИМ ШЕФ-ПОВАРА" ==========
-        const chefModeButton = document.getElementById('chefModeButton');
-        if (chefModeButton) {
-            chefModeButton.addEventListener('click', () => {
-                localStorage.setItem('chefRecipeData', JSON.stringify(recipeData));
+        document.getElementById('chefButton').addEventListener('click', () => {
+            if (currentRecipe) {
+                localStorage.setItem('chefRecipeData', JSON.stringify(currentRecipe));
                 window.location.href = 'chef.html';
-            });
-        }
+            } else {
+                showNotification('Данные рецепта не загружены');
+            }
+        });
         
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed; bottom: 20px; right: 20px; background-color: #5A8F4C;
-                color: white; padding: 12px 24px; border-radius: 20px; font-size: 16px;
-                z-index: 1100; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => { if (notification.parentElement) notification.remove(); }, 300);
-            }, 3000);
-        }
-        
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = `
-            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-            @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        `;
-        document.head.appendChild(styleSheet);
-        
-        // Выпадающее меню профиля
-        const profileIcon = document.getElementById('profileIcon');
-        const dropdownMenu = document.getElementById('dropdownMenu');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
-        if (profileIcon) {
-            profileIcon.addEventListener('click', (event) => {
-                event.stopPropagation();
-                dropdownMenu.classList.toggle('show');
-            });
-        }
-        document.addEventListener('click', () => { if (dropdownMenu) dropdownMenu.classList.remove('show'); });
-        if (dropdownMenu) dropdownMenu.addEventListener('click', (event) => { event.stopPropagation(); });
-        
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('userSession');
-                sessionStorage.removeItem('userSession');
-                window.location.href = 'enter.html';
-            });
-        }
-        
-        // Загрузка аватара при старте
-        updateAvatarDisplay();
-        
-        document.addEventListener('DOMContentLoaded', loadRecipeData);
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initProfileDropdown();
+            updateAuthUI();
+            loadRecipe();
+        });
     </script>
 </body>
 </html>

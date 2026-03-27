@@ -5,6 +5,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование рецепта</title>
     <link rel="stylesheet" href="css/edit-recipe.css">
+    <style>
+        /* Стили для модального окна редактирования профиля */
+        .profile-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .profile-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .profile-modal-container {
+            background-color: #FFF8EE;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 3px solid #9B5E2E;
+        }
+        .profile-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 2px solid #9B5E2E;
+            background-color: #FFEDD2;
+        }
+        .profile-modal-header h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #9B5E2E;
+        }
+        .profile-modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            color: #9B5E2E;
+            transition: color 0.2s;
+            line-height: 1;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .profile-modal-close:hover {
+            color: #D46B3A;
+            background-color: #FFF3E0;
+        }
+        .profile-modal-body {
+            padding: 24px;
+        }
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #EADABC;
+        }
+        .current-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #9B5E2E;
+            margin-bottom: 15px;
+            background-color: #FFEDD2;
+        }
+        .avatar-upload-btn {
+            background-color: #C5E0B4;
+            border: 2px solid #9B5E2E;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-size: 14px;
+            color: #9B5E2E;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .avatar-upload-btn:hover {
+            background-color: #b1d29b;
+        }
+        .profile-form-field {
+            margin-bottom: 20px;
+        }
+        .profile-form-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #9B5E2E;
+            font-size: 16px;
+        }
+        .profile-form-field input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #9B5E2E;
+            border-radius: 15px;
+            font-size: 16px;
+            background: white;
+            color: #9B5E2E;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .profile-form-field input:focus {
+            outline: none;
+            border-color: #D46B3A;
+        }
+        .profile-modal-footer {
+            padding: 16px 24px;
+            border-top: 2px solid #9B5E2E;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background-color: #FFEDD2;
+        }
+        .profile-modal-btn {
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid #9B5E2E;
+            font-family: inherit;
+        }
+        .profile-modal-btn-cancel {
+            background-color: #FFF3E0;
+            color: #9B5E2E;
+        }
+        .profile-modal-btn-cancel:hover {
+            background-color: #F7EDE1;
+        }
+        .profile-modal-btn-save {
+            background-color: #C5E0B4;
+            color: #9B5E2E;
+        }
+        .profile-modal-btn-save:hover {
+            background-color: #b1d29b;
+        }
+        
+        /* Кнопка внизу */
+        .button-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        .action-button {
+            width: 320px;
+            height: 100px;
+            background-color: #C5E0B4;
+            border: 3px solid #9B5E2E;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-size: 28px;
+            color: #9B5E2E;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+        }
+        
+        .action-button:hover {
+            background-color: #b1d29b;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(155, 94, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: #9B5E2E;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5A8F4C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification-error {
+            background-color: #D46B3A;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -12,10 +233,10 @@
             <a href="main.html" class="logo"><img src="/images/Logo.png"></a>
         </div>
         <div class="profile-icon" id="profileIcon">
-            <img src="images/Ellipse 21.png" class="profile-img">
+            <img src="images/Ellipse 21.png" class="profile-img" id="profileAvatar">
             <div class="dropdown-menu" id="dropdownMenu">
                 <a href="profile.html" class="dropdown-item">Профиль</a>
-                <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
+                <button class="dropdown-item" id="editProfileInDropdownBtn">Редактировать</button>
                 <button class="dropdown-item" id="logoutBtn">Выйти</button>
             </div>
         </div> 
@@ -86,282 +307,465 @@
         </div>
     </main>
 
+    <!-- Модальное окно для редактирования профиля -->
+    <div class="profile-modal-overlay" id="editProfileModal">
+        <div class="profile-modal-container">
+            <div class="profile-modal-header">
+                <h2>Смена пароля</h2>
+                <button class="profile-modal-close" id="closeProfileModalBtn">&times;</button>
+            </div>
+            <div class="profile-modal-body">
+                <div class="avatar-section">
+                    <img id="modalAvatarPreview" class="current-avatar-large" src="images/Ellipse 21.png" alt="Аватар">
+                    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                    <button class="avatar-upload-btn" id="uploadAvatarBtn">📷 Загрузить фото</button>
+                </div>
+                <div class="profile-form-field">
+                    <label>Текущий пароль</label>
+                    <input type="password" id="currentPassword" placeholder="Введите текущий пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Новый пароль</label>
+                    <input type="password" id="newPassword" placeholder="Введите новый пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Подтвердите новый пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль">
+                </div>
+            </div>
+            <div class="profile-modal-footer">
+                <button class="profile-modal-btn profile-modal-btn-cancel" id="cancelProfileModalBtn">Отмена</button>
+                <button class="profile-modal-btn profile-modal-btn-save" id="saveProfileBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const imageBox = document.getElementById('imageBox');
-        const ingredientsList = document.getElementById('ingredientsList');
-        const addIngredientButton = document.getElementById('addIngredientButton');
-        const addStepButton = document.getElementById('addStepButton');
-        const stepsContainer = document.getElementById('stepsContainer');
+        const API_BASE_URL = 'http://localhost:8000/api';
         
-        let ingredients = [];
-        let nextIngredientId = 1;
-        let steps = [];
-        let nextStepId = 1;
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        const getToken = () => localStorage.getItem('authToken');
+        const getUserId = () => localStorage.getItem('userId');
         
-        function updateContainerHeight() {
-            const container = document.querySelector('.information-container');
-            if (container) {
-                container.style.height = 'auto';
+        const showMessage = (text, isError = false) => {
+            const msg = document.createElement('div');
+            msg.className = 'notification';
+            if (isError) {
+                msg.classList.add('notification-error');
             }
-        }
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        };
         
-        function renderIngredients() {
-            if (!ingredientsList) return;
+        const apiRequest = async (url, options = {}) => {
+            const res = await fetch(`${API_BASE_URL}${url}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ message: 'Ошибка' }));
+                throw new Error(err.message);
+            }
+            return res.json();
+        };
+        
+        // ========== АВАТАР И ПРОФИЛЬ ==========
+        let currentAvatar = 'images/Ellipse 21.png';
+        let tempAvatarFile = null;
+        
+        const loadUserAvatar = async () => {
+            try {
+                const user = await apiRequest(`/users/${getUserId()}/`);
+                if (user.avatar) {
+                    currentAvatar = user.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatar;
+                    document.getElementById('modalAvatarPreview').src = currentAvatar;
+                }
+            } catch (e) {
+                if (e.message === 'Не авторизован') window.location.href = 'enter.html';
+            }
+        };
+        
+        // ========== МОДАЛЬНОЕ ОКНО (независимые операции) ==========
+        const modal = document.getElementById('editProfileModal');
+        
+        const openModal = () => {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('modalAvatarPreview').src = currentAvatar;
+            tempAvatarFile = null;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            tempAvatarFile = null;
+        };
+        
+        const saveProfile = async () => {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
             
-            if (ingredients.length === 0) {
-                ingredientsList.innerHTML = '';
-                updateContainerHeight();
+            const hasPasswordChange = !!newPassword;
+            const hasAvatarChange = !!tempAvatarFile;
+            
+            // Если ничего не меняем
+            if (!hasPasswordChange && !hasAvatarChange) {
+                closeModal();
                 return;
             }
             
-            ingredientsList.innerHTML = ingredients.map(ing => `
-                <div class="ingredient-item" data-ingredient-id="${ing.id}">
-                    <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название">
-                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || '')}" placeholder="Кол-во">
-                    <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
-                    <button class="delete-ingredient-button" data-ingredient-id="${ing.id}">
-                        <img src="images/delete.png" alt="Удалить">
-                    </button>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.ingredient-name').forEach(input => {
-                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
-                input.addEventListener('input', (e) => {
-                    const ingredient = ingredients.find(i => i.id === ingredientId);
-                    if (ingredient) {
-                        ingredient.name = e.target.value;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.ingredient-quantity').forEach(input => {
-                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
-                input.addEventListener('input', (e) => {
-                    const ingredient = ingredients.find(i => i.id === ingredientId);
-                    if (ingredient) {
-                        ingredient.quantity = e.target.value;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.ingredient-unit').forEach(input => {
-                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
-                input.addEventListener('input', (e) => {
-                    const ingredient = ingredients.find(i => i.id === ingredientId);
-                    if (ingredient) {
-                        ingredient.unit = e.target.value;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.delete-ingredient-button').forEach(btn => {
-                const ingredientId = parseInt(btn.getAttribute('data-ingredient-id'));
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    ingredients = ingredients.filter(i => i.id !== ingredientId);
-                    renderIngredients();
-                });
-            });
-            
-            updateContainerHeight();
-        }
-        
-        function addNewIngredient() {
-            const newId = nextIngredientId++;
-            ingredients.push({
-                id: newId,
-                name: '',
-                quantity: '',
-                unit: ''
-            });
-            renderIngredients();
-            setTimeout(() => {
-                const newInput = document.querySelector(`.ingredient-name[data-ingredient-id="${newId}"]`);
-                if (newInput) newInput.focus();
-            }, 30);
-        }
-        
-        function renderSteps() {
-            if (!stepsContainer) return;
-            
-            if (steps.length === 0) {
-                stepsContainer.innerHTML = '';
-                updateContainerHeight();
-                return;
+            // Проверка пароля только если есть смена пароля
+            if (hasPasswordChange) {
+                if (!currentPassword) {
+                    showMessage('Введите текущий пароль', true);
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    showMessage('Пароли не совпадают', true);
+                    return;
+                }
+                if (newPassword.length < 4) {
+                    showMessage('Минимум 4 символа', true);
+                    return;
+                }
             }
             
-            stepsContainer.innerHTML = steps.map((step, idx) => `
-                <div class="step-item" data-step-id="${step.id}">
-                    <div class="step-number">${idx + 1}</div>
-                    <div class="step-content">
-                        <textarea class="step-textarea" data-step-id="${step.id}" placeholder="Опишите шаг приготовления...">${escapeHtml(step.text)}</textarea>
-                        <div class="step-time-wrapper">
-                            <input type="number" class="step-time-input" data-step-id="${step.id}" value="${step.time || ''}" placeholder="Время">
-                            <span class="step-time-label">мин.</span>
-                        </div>
-                    </div>
-                    <button class="delete-step-button" data-step-id="${step.id}">
-                        <img src="images/delete.png" alt="Удалить">
-                    </button>
-                </div>
-            `).join('');
+            const btn = document.getElementById('saveProfileBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
             
-            document.querySelectorAll('.step-textarea').forEach(textarea => {
-                const stepId = parseInt(textarea.getAttribute('data-step-id'));
-                textarea.addEventListener('input', (e) => {
-                    const step = steps.find(s => s.id === stepId);
-                    if (step) {
-                        step.text = e.target.value;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.step-time-input').forEach(input => {
-                const stepId = parseInt(input.getAttribute('data-step-id'));
-                input.addEventListener('input', (e) => {
-                    const step = steps.find(s => s.id === stepId);
-                    if (step) {
-                        step.time = e.target.value;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.delete-step-button').forEach(btn => {
-                const stepId = parseInt(btn.getAttribute('data-step-id'));
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    steps = steps.filter(s => s.id !== stepId);
-                    renderSteps();
-                });
-            });
-            
-            updateContainerHeight();
-        }
-        
-        function addNewStep() {
-            const newId = nextStepId++;
-            steps.push({
-                id: newId,
-                text: '',
-                time: ''
-            });
-            renderSteps();
-            setTimeout(() => {
-                const newTextarea = document.querySelector(`.step-textarea[data-step-id="${newId}"]`);
-                if (newTextarea) newTextarea.focus();
-            }, 30);
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-        
-        // Выбор фото
-        if (imageBox) {
-            imageBox.addEventListener('click', () => {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = 'image/*';
+            try {
+                // Смена пароля (только если введен новый)
+                if (hasPasswordChange) {
+                    await apiRequest(`/users/${getUserId()}/change-password/`, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            current_password: currentPassword, 
+                            new_password: newPassword 
+                        })
+                    });
+                    showMessage('Пароль изменен');
+                }
                 
-                fileInput.onchange = (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
+                // Загрузка аватара (только если выбран файл)
+                if (hasAvatarChange) {
+                    const formData = new FormData();
+                    formData.append('avatar', tempAvatarFile);
                     
+                    const response = await fetch(`${API_BASE_URL}/users/${getUserId()}/upload-avatar/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    currentAvatar = data.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatar;
+                    document.getElementById('modalAvatarPreview').src = currentAvatar;
+                    showMessage('Аватар обновлен');
+                }
+                
+                closeModal();
+                
+            } catch (err) {
+                showMessage(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Сохранить';
+            }
+        };
+        
+        // Загрузка аватара в модальном окне
+        document.getElementById('uploadAvatarBtn').onclick = () => document.getElementById('avatarUpload').click();
+        document.getElementById('avatarUpload').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('Файл больше 5MB', true);
+                return;
+            }
+            
+            tempAvatarFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById('modalAvatarPreview').src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+        
+        // Обработчики модального окна
+        document.getElementById('editProfileInDropdownBtn').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.remove('show');
+            openModal();
+        };
+        document.getElementById('closeProfileModalBtn').onclick = closeModal;
+        document.getElementById('cancelProfileModalBtn').onclick = closeModal;
+        document.getElementById('saveProfileBtn').onclick = saveProfile;
+        modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+        
+        // ========== РАБОТА С РЕЦЕПТАМИ ==========
+        let currentRecipeId = null;
+        let imageFile = null;
+        
+        const getRecipeId = () => new URLSearchParams(location.search).get('id');
+        
+        // Загрузка рецепта для редактирования
+        const loadRecipe = async () => {
+            const id = getRecipeId();
+            if (!id) return;
+            currentRecipeId = id;
+            
+            try {
+                const recipe = await apiRequest(`/recipes/${id}/`);
+                document.getElementById('recipeName').value = recipe.name || '';
+                document.getElementById('category1').value = recipe.category1 || '';
+                document.getElementById('category2').value = recipe.category2 || '';
+                document.getElementById('cookingTime').value = recipe.cooking_time || '';
+                document.getElementById('calories').value = recipe.calories || '';
+                document.getElementById('description').value = recipe.description || '';
+                
+                if (recipe.ingredients?.length) {
+                    const container = document.getElementById('ingredientsList');
+                    container.innerHTML = recipe.ingredients.map(ing => `
+                        <div class="ingredient-item">
+                            <input type="text" class="ingredient-name" value="${escapeHtml(ing.name)}" placeholder="Название">
+                            <input type="text" class="ingredient-quantity" value="${escapeHtml(ing.quantity)}" placeholder="Кол-во">
+                            <input type="text" class="ingredient-unit" value="${escapeHtml(ing.unit)}" placeholder="шт/г/кг">
+                            <button class="delete-ingredient-button"><img src="images/delete.png"></button>
+                        </div>
+                    `).join('');
+                }
+                
+                if (recipe.steps?.length) {
+                    const container = document.getElementById('stepsContainer');
+                    container.innerHTML = recipe.steps.map((step, i) => `
+                        <div class="step-item">
+                            <div class="step-number">${i + 1}</div>
+                            <div class="step-content">
+                                <textarea class="step-textarea" placeholder="Опишите шаг...">${escapeHtml(step.text)}</textarea>
+                                <div class="step-time-wrapper">
+                                    <input type="number" class="step-time-input" value="${step.time || ''}" placeholder="Время">
+                                    <span class="step-time-label">мин.</span>
+                                </div>
+                            </div>
+                            <button class="delete-step-button"><img src="images/delete.png"></button>
+                        </div>
+                    `).join('');
+                }
+                
+                if (recipe.image) {
+                    const img = document.createElement('img');
+                    img.src = recipe.image;
+                    document.getElementById('imageBox').innerHTML = '';
+                    document.getElementById('imageBox').appendChild(img);
+                }
+            } catch (err) {
+                showMessage(err.message, true);
+            }
+        };
+        
+        // Сохранение рецепта
+        document.getElementById('saveRecipeButton').onclick = async () => {
+            const recipeData = {
+                name: document.getElementById('recipeName').value.trim(),
+                category1: document.getElementById('category1').value.trim(),
+                category2: document.getElementById('category2').value.trim(),
+                cooking_time: parseInt(document.getElementById('cookingTime').value) || 0,
+                calories: parseInt(document.getElementById('calories').value) || 0,
+                description: document.getElementById('description').value.trim(),
+                ingredients: [],
+                steps: []
+            };
+            
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                const name = item.querySelector('.ingredient-name')?.value.trim();
+                if (name) {
+                    recipeData.ingredients.push({
+                        name: name,
+                        quantity: item.querySelector('.ingredient-quantity')?.value || '',
+                        unit: item.querySelector('.ingredient-unit')?.value || ''
+                    });
+                }
+            });
+            
+            let order = 1;
+            document.querySelectorAll('.step-item').forEach(item => {
+                const text = item.querySelector('.step-textarea')?.value.trim();
+                if (text) {
+                    recipeData.steps.push({
+                        text: text,
+                        time: parseInt(item.querySelector('.step-time-input')?.value) || 0,
+                        order: order++
+                    });
+                }
+            });
+            
+            if (!recipeData.name) return showMessage('Введите название', true);
+            if (!recipeData.ingredients.length) return showMessage('Добавьте ингредиенты', true);
+            if (!recipeData.steps.length) return showMessage('Добавьте шаги', true);
+            
+            const btn = document.getElementById('saveRecipeButton');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
+            
+            try {
+                let result;
+                if (currentRecipeId) {
+                    result = await apiRequest(`/recipes/${currentRecipeId}/`, {
+                        method: 'PUT',
+                        body: JSON.stringify(recipeData)
+                    });
+                } else {
+                    result = await apiRequest('/recipes/', {
+                        method: 'POST',
+                        body: JSON.stringify(recipeData)
+                    });
+                    currentRecipeId = result.id;
+                }
+                
+                if (imageFile && currentRecipeId) {
+                    const formData = new FormData();
+                    formData.append('image', imageFile);
+                    await fetch(`${API_BASE_URL}/recipes/${currentRecipeId}/upload-image/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                }
+                
+                showMessage('Рецепт сохранен');
+                setTimeout(() => location.href = `information.html?id=${currentRecipeId}`, 1500);
+            } catch (err) {
+                showMessage(err.message, true);
+                btn.disabled = false;
+                btn.innerHTML = 'Сохранить изменения';
+            }
+        };
+        
+        // Удаление рецепта
+        document.getElementById('deleteRecipeButton').onclick = async () => {
+            if (!currentRecipeId) return;
+            if (!confirm('Удалить рецепт?')) return;
+            
+            const btn = document.getElementById('deleteRecipeButton');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Удаление...';
+            
+            try {
+                await apiRequest(`/recipes/${currentRecipeId}/`, { method: 'DELETE' });
+                showMessage('Рецепт удален');
+                setTimeout(() => location.href = 'profile.html', 1500);
+            } catch (err) {
+                showMessage(err.message, true);
+                btn.disabled = false;
+                btn.innerHTML = 'Удалить рецепт';
+            }
+        };
+        
+        // Загрузка изображения
+        document.getElementById('imageBox').onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file && file.size <= 5 * 1024 * 1024) {
+                    imageFile = file;
                     const reader = new FileReader();
-                    reader.onload = (e) => {
+                    reader.onload = (ev) => {
                         const img = document.createElement('img');
-                        img.src = e.target.result;
-                        imageBox.innerHTML = '';
-                        imageBox.appendChild(img);
+                        img.src = ev.target.result;
+                        document.getElementById('imageBox').innerHTML = '';
+                        document.getElementById('imageBox').appendChild(img);
                     };
                     reader.readAsDataURL(file);
-                };
-                
-                fileInput.click();
-            });
-        }
+                } else if (file) {
+                    showMessage('Файл больше 5MB', true);
+                }
+            };
+            input.click();
+        };
         
         // Добавление ингредиента
-        if (addIngredientButton) {
-            addIngredientButton.addEventListener('click', addNewIngredient);
-        }
+        document.getElementById('addIngredientButton').onclick = () => {
+            const container = document.getElementById('ingredientsList');
+            const div = document.createElement('div');
+            div.className = 'ingredient-item';
+            div.innerHTML = `
+                <input type="text" class="ingredient-name" placeholder="Название">
+                <input type="text" class="ingredient-quantity" placeholder="Кол-во">
+                <input type="text" class="ingredient-unit" placeholder="шт/г/кг">
+                <button class="delete-ingredient-button"><img src="images/delete.png"></button>
+            `;
+            div.querySelector('.delete-ingredient-button').onclick = () => div.remove();
+            container.appendChild(div);
+        };
         
         // Добавление шага
-        if (addStepButton) {
-            addStepButton.addEventListener('click', addNewStep);
-        }
+        document.getElementById('addStepButton').onclick = () => {
+            const container = document.getElementById('stepsContainer');
+            const div = document.createElement('div');
+            div.className = 'step-item';
+            const stepNum = container.children.length + 1;
+            div.innerHTML = `
+                <div class="step-number">${stepNum}</div>
+                <div class="step-content">
+                    <textarea class="step-textarea" placeholder="Опишите шаг приготовления..."></textarea>
+                    <div class="step-time-wrapper">
+                        <input type="number" class="step-time-input" placeholder="Время">
+                        <span class="step-time-label">мин.</span>
+                    </div>
+                </div>
+                <button class="delete-step-button"><img src="images/delete.png"></button>
+            `;
+            div.querySelector('.delete-step-button').onclick = () => {
+                div.remove();
+                document.querySelectorAll('.step-item').forEach((item, i) => {
+                    item.querySelector('.step-number').textContent = i + 1;
+                });
+            };
+            container.appendChild(div);
+        };
         
-        // Инициализация одного шага по умолчанию
-        if (steps.length === 0) {
-            addNewStep();
-        }
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        };
         
-        // Инициализация одного ингредиента по умолчанию
-        if (ingredients.length === 0) {
-            addNewIngredient();
-        }
-        
-        // Выпадающее меню профиля
+        // Выпадающее меню
         const profileIcon = document.getElementById('profileIcon');
         const dropdownMenu = document.getElementById('dropdownMenu');
-        const editProfileBtn = document.getElementById('editProfileBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
+        profileIcon.onclick = (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        };
+        document.onclick = () => dropdownMenu.classList.remove('show');
         
-        if (profileIcon) {
-            profileIcon.addEventListener('click', (event) => {
-                event.stopPropagation();
-                if (dropdownMenu) dropdownMenu.classList.toggle('show');
-            });
-        }
+        // Выход
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            location.href = 'enter.html';
+        };
         
-        document.addEventListener('click', () => {
-            if (dropdownMenu) dropdownMenu.classList.remove('show');
-        });
-        
-        if (dropdownMenu) {
-            dropdownMenu.addEventListener('click', (event) => {
-                event.stopPropagation();
-            });
-        }
-        
-        if (editProfileBtn) {
-            editProfileBtn.addEventListener('click', () => {
-                window.location.href = 'profile.html';
-            });
-        }
-        
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('userSession');
-                sessionStorage.removeItem('userSession');
-                window.location.href = 'enter.html';
-            });
-        }
-        
-        // Кнопки сохранения и удаления
-        const saveRecipeBtn = document.getElementById('saveRecipeButton');
-        const deleteRecipeBtn = document.getElementById('deleteRecipeButton');
-        
-        if (saveRecipeBtn) {
-            saveRecipeBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                window.location.href = 'profile.html';
-            });
-        }
-        
-        if (deleteRecipeBtn) {
-            deleteRecipeBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                window.location.href = 'profile.html';
-            });
-        }
+        // Инициализация
+        loadUserAvatar();
+        loadRecipe();
     </script>
 </body>
 </html>

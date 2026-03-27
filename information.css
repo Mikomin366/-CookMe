@@ -43,61 +43,37 @@ body {
     font-size: 48px;
 }
 
-/* Иконка профиля */
-.profile-icon {
+/* Кнопки авторизации */
+.auth-buttons {
     margin-left: auto;
-    cursor: pointer;
-    width: 60px;
-    height: 60px;
-    margin-right: 10px;
-    position: relative;
+    display: flex;
+    gap: 12px;
 }
 
-
-
-.dropdown-menu {
-    position: absolute;
-    top: 75px;
-    right: 0;
-    background: white;
-    border: 2px solid #9B5E2E;
-    border-radius: 15px;
-    min-width: 180px;
-    display: none;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    margin-top: 5px;
-}
-
-.dropdown-menu.show {
-    display: block;
-}
-
-.dropdown-item {
-    display: block;
-    padding: 12px 20px;
-    text-decoration: none;
+.enter-button {
+    font-size: 24px;
     color: #9B5E2E;
-    font-size: 16px;
-    background: white;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-family: inherit;
-    box-sizing: border-box;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    text-align: center;
 }
 
-.dropdown-item:first-child {
-    border-radius: 13px 13px 0 0;
+.register-button {
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 16px 40px;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    text-align: center;
 }
 
-.dropdown-item:last-child {
-    border-radius: 0 0 13px 13px;
-}
-
-.dropdown-item:hover {
-    background-color: #F7EDE1;
+.enter-button:hover, .register-button:hover {
+    background-color: #b1d29b;
 }
 
 /* Наполнения */
@@ -346,6 +322,30 @@ body {
 
 /* Адаптивность */
 @media (max-width: 768px) {
+    header {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    
+    .logo img {
+        max-width: 70px;
+        height: auto;
+    }
+    
+    .auth-buttons {
+        gap: 8px;
+    }
+    
+    .enter-button, 
+    .register-button {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-width: 2px;
+        border-radius: 15px;
+    }
+    
     .information-container {
         width: 95%;
         margin-left: auto;
@@ -363,6 +363,7 @@ body {
     .recipe-form-fields {
         width: 100%;
         margin-left: 0;
+        margin-top: 30px;
     }
     
     .form-field label {
@@ -372,6 +373,14 @@ body {
     .field-value {
         font-size: 20px;
         padding: 10px 14px;
+    }
+    
+    .ingredients-wrapper {
+        width: 100%;
+    }
+    
+    .ingredients-field {
+        width: 100%;
     }
     
     .ingredients-field label {
@@ -420,4 +429,103 @@ body {
     .tl {
         font-size: 36px;
     }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        max-width: 60px;
+    }
+    
+    .enter-button, 
+    .register-button {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+    
+    .information-container {
+        width: 95%;
+        padding: 15px;
+    }
+    
+    .image-label {
+        font-size: 28px;
+    }
+    
+    .form-field label {
+        font-size: 18px;
+    }
+    
+    .field-value {
+        font-size: 16px;
+    }
+    
+    .ingredient-text {
+        font-size: 14px;
+    }
+    
+    .step-text {
+        font-size: 14px;
+    }
+    
+    .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    .action-button {
+        height: 60px;
+        font-size: 18px;
+    }
+    
+    .tl {
+        font-size: 28px;
+    }
+}
+
+/* Для адаптивности кнопок */
+
+/* Иконка профиля */
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+
+.dropdown-menu {
+    position: absolute;
+    top: 70px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 150px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 14px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
 }

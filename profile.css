@@ -55,7 +55,7 @@ body {
 }
 .profile-container {
     width: 1600px;
-    height: 800px;
+    min-height: 800px;
     background: #FFF8EE;
     border: 3px solid #9B5E2E;
     border-radius: 20px;

@@ -379,3 +379,50 @@ body {
     margin-top: 47px;
     margin-left: -40px;
 }
+
+/* Для адаптивной замены кнопок */
+
+/* Иконка профиля */
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+
+.dropdown-menu {
+    position: absolute;
+    top: 70px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 150px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 14px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
+}
