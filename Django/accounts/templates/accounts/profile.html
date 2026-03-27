@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head><title>Профиль</title></head>
+<body>
+    <h2>Профиль</h2>
+    <p>Пользователь: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+    <a href="{% url 'accounts:logout' %}">Выйти</a>
+</body>
+</html>
