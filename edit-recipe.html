@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -39,15 +38,6 @@
                     <img src="images/plus.png" alt="Добавить">
                 </button>
             </div>
-            <div class="steps-section">
-                <div class="steps-header">
-                    <label>Пошаговый рецепт</label>
-                    <button class="add-step-button" id="addStepButton">
-                        <img src="images/plus.png" alt="Добавить шаг">
-                    </button>
-                </div>
-                <div id="stepsContainer" class="steps-list"></div>
-            </div>
         </div>
         
         <div class="recipe-form-fields">
@@ -77,6 +67,16 @@
             <div class="form-field">
                 <label>Краткое описание</label>
                 <textarea id="description" placeholder="Введите краткое описание рецепта"></textarea>
+            </div>
+            
+            <div class="steps-section">
+                <div class="steps-header">
+                    <label>Пошаговый рецепт</label>
+                    <button class="add-step-button" id="addStepButton">
+                        <img src="images/plus.png" alt="Добавить шаг">
+                    </button>
+                </div>
+                <div id="stepsContainer" class="steps-list"></div>
             </div>
             
             <div class="description-container">
@@ -116,19 +116,41 @@
             
             ingredientsList.innerHTML = ingredients.map(ing => `
                 <div class="ingredient-item" data-ingredient-id="${ing.id}">
-                    <input type="text" class="ingredient-text" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.text)}" placeholder="Введите ингредиент">
+                    <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название">
+                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || '')}" placeholder="Кол-во">
+                    <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
                     <button class="delete-ingredient-button" data-ingredient-id="${ing.id}">
                         <img src="images/delete.png" alt="Удалить">
                     </button>
                 </div>
             `).join('');
             
-            document.querySelectorAll('.ingredient-text').forEach(input => {
+            document.querySelectorAll('.ingredient-name').forEach(input => {
                 const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
                 input.addEventListener('input', (e) => {
                     const ingredient = ingredients.find(i => i.id === ingredientId);
                     if (ingredient) {
-                        ingredient.text = e.target.value;
+                        ingredient.name = e.target.value;
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.ingredient-quantity').forEach(input => {
+                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
+                input.addEventListener('input', (e) => {
+                    const ingredient = ingredients.find(i => i.id === ingredientId);
+                    if (ingredient) {
+                        ingredient.quantity = e.target.value;
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.ingredient-unit').forEach(input => {
+                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
+                input.addEventListener('input', (e) => {
+                    const ingredient = ingredients.find(i => i.id === ingredientId);
+                    if (ingredient) {
+                        ingredient.unit = e.target.value;
                     }
                 });
             });
@@ -149,11 +171,13 @@
             const newId = nextIngredientId++;
             ingredients.push({
                 id: newId,
-                text: ''
+                name: '',
+                quantity: '',
+                unit: ''
             });
             renderIngredients();
             setTimeout(() => {
-                const newInput = document.querySelector(`.ingredient-text[data-ingredient-id="${newId}"]`);
+                const newInput = document.querySelector(`.ingredient-name[data-ingredient-id="${newId}"]`);
                 if (newInput) newInput.focus();
             }, 30);
         }
@@ -321,7 +345,7 @@
             });
         }
         
-        // Кнопки сохранения и удаления - просто перенаправление
+        // Кнопки сохранения и удаления
         const saveRecipeBtn = document.getElementById('saveRecipeButton');
         const deleteRecipeBtn = document.getElementById('deleteRecipeButton');
         

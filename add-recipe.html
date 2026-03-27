@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -39,15 +38,6 @@
                     <img src="images/plus.png" alt="Добавить">
                 </button>
             </div>
-            <div class="steps-section">
-                <div class="steps-header">
-                    <label>Пошаговый рецепт</label>
-                    <button class="add-step-button" id="addStepButton">
-                        <img src="images/plus.png" alt="Добавить шаг">
-                    </button>
-                </div>
-                <div id="stepsContainer" class="steps-list"></div>
-            </div>
         </div>
         
         <div class="recipe-form-fields">
@@ -79,8 +69,18 @@
                 <textarea id="description" placeholder="Введите краткое описание рецепта"></textarea>
             </div>
             
-            <div class="description-container">
-                <button class="description-button" id="addDescriptionButton">Добавить рецепт</button>
+            <div class="steps-section">
+                <div class="steps-header">
+                    <label>Пошаговый рецепт</label>
+                    <button class="add-step-button" id="addStepButton">
+                        <img src="images/plus.png" alt="Добавить шаг">
+                    </button>
+                </div>
+                <div id="stepsContainer" class="steps-list"></div>
+            </div>
+            
+            <div class="action-container">
+                <button class="action-button add-recipe-button" id="addRecipeButton">Добавить рецепт</button>
             </div>
         </div>
     </main>
@@ -91,6 +91,7 @@
         const addIngredientButton = document.getElementById('addIngredientButton');
         const addStepButton = document.getElementById('addStepButton');
         const stepsContainer = document.getElementById('stepsContainer');
+        const addRecipeButton = document.getElementById('addRecipeButton');
         
         let ingredients = [];
         let nextIngredientId = 1;
@@ -115,19 +116,41 @@
             
             ingredientsList.innerHTML = ingredients.map(ing => `
                 <div class="ingredient-item" data-ingredient-id="${ing.id}">
-                    <input type="text" class="ingredient-text" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.text)}" placeholder="Введите ингредиент">
+                    <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название">
+                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || '')}" placeholder="Кол-во">
+                    <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
                     <button class="delete-ingredient-button" data-ingredient-id="${ing.id}">
                         <img src="images/delete.png" alt="Удалить">
                     </button>
                 </div>
             `).join('');
             
-            document.querySelectorAll('.ingredient-text').forEach(input => {
+            document.querySelectorAll('.ingredient-name').forEach(input => {
                 const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
                 input.addEventListener('input', (e) => {
                     const ingredient = ingredients.find(i => i.id === ingredientId);
                     if (ingredient) {
-                        ingredient.text = e.target.value;
+                        ingredient.name = e.target.value;
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.ingredient-quantity').forEach(input => {
+                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
+                input.addEventListener('input', (e) => {
+                    const ingredient = ingredients.find(i => i.id === ingredientId);
+                    if (ingredient) {
+                        ingredient.quantity = e.target.value;
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.ingredient-unit').forEach(input => {
+                const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
+                input.addEventListener('input', (e) => {
+                    const ingredient = ingredients.find(i => i.id === ingredientId);
+                    if (ingredient) {
+                        ingredient.unit = e.target.value;
                     }
                 });
             });
@@ -148,11 +171,13 @@
             const newId = nextIngredientId++;
             ingredients.push({
                 id: newId,
-                text: ''
+                name: '',
+                quantity: '',
+                unit: ''
             });
             renderIngredients();
             setTimeout(() => {
-                const newInput = document.querySelector(`.ingredient-text[data-ingredient-id="${newId}"]`);
+                const newInput = document.querySelector(`.ingredient-name[data-ingredient-id="${newId}"]`);
                 if (newInput) newInput.focus();
             }, 30);
         }
@@ -238,9 +263,7 @@
                 .replace(/'/g, '&#39;');
         }
         
-        // Функция для добавления рецепта
         function addRecipe() {
-            // Собираем данные рецепта
             const recipeName = document.getElementById('recipeName').value;
             const category1 = document.getElementById('category1').value;
             const category2 = document.getElementById('category2').value;
@@ -248,20 +271,14 @@
             const calories = document.getElementById('calories').value;
             const description = document.getElementById('description').value;
             
-            // Собираем ингредиенты
             const ingredientsList = ingredients
-                .filter(ing => ing.text.trim() !== '')
-                .map(ing => ing.text);
+                .filter(ing => ing.name && ing.name.trim() !== '')
+                .map(ing => `${ing.name} - ${ing.quantity || ''} ${ing.unit || ''}`.trim());
             
-            // Собираем шаги
             const stepsList = steps
-                .filter(step => step.text.trim() !== '')
-                .map(step => ({
-                    text: step.text,
-                    time: step.time
-                }));
+                .filter(step => step.text && step.text.trim() !== '')
+                .map(step => step.text);
             
-            // Проверяем заполнение обязательных полей
             if (!recipeName) {
                 alert('Пожалуйста, введите название рецепта');
                 return;
@@ -277,7 +294,6 @@
                 return;
             }
             
-            // Перенаправляем на profile.html
             window.location.href = 'profile.html';
         }
         
@@ -316,6 +332,11 @@
             addStepButton.addEventListener('click', addNewStep);
         }
         
+        // Добавление рецепта
+        if (addRecipeButton) {
+            addRecipeButton.addEventListener('click', addRecipe);
+        }
+        
         // Инициализация одного шага по умолчанию
         if (steps.length === 0) {
             addNewStep();
@@ -335,7 +356,7 @@
         if (profileIcon) {
             profileIcon.addEventListener('click', (event) => {
                 event.stopPropagation();
-                if (dropdownMenu) dropdownMenu.classList.toggle('show');
+                dropdownMenu.classList.toggle('show');
             });
         }
         
@@ -361,13 +382,6 @@
                 sessionStorage.removeItem('userSession');
                 window.location.href = 'enter.html';
             });
-        }
-        
-        // Кнопка добавления рецепта
-        const addDescriptionButton = document.getElementById('addDescriptionButton');
-        
-        if (addDescriptionButton) {
-            addDescriptionButton.addEventListener('click', addRecipe);
         }
     </script>
 </body>

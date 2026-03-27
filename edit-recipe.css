@@ -1,4 +1,3 @@
-
 header {
     display: flex;
     align-items: center;
@@ -163,10 +162,10 @@ body {
     display: flex;
     background-color: #FFEDD2;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     border: 3px solid #9B5E2E;
     border-radius: 20px;
-    padding: 25px 25px;
+    padding: 12px 12px;
 }
 
 .form-field label {
@@ -174,7 +173,8 @@ body {
     color: #9B5E2E;
 }
 
-.form-field input, .form-field textarea {
+.form-field input,
+.form-field textarea {
     background: white;
     border: 2px solid #9B5E2E;
     border-radius: 15px;
@@ -182,9 +182,12 @@ body {
     font-size: 20px;
     color: #9B5E2E;
     font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.form-field input::placeholder, .form-field textarea::placeholder {
+.form-field input::placeholder,
+.form-field textarea::placeholder {
     color: #CBA77B;
 }
 
@@ -195,12 +198,14 @@ body {
 
 .categories-input {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
 }
 
 .categories-input input {
-    width: 100%;
+    width: 50%;
+    flex: 1;
     box-sizing: border-box;
 }
 
@@ -212,14 +217,16 @@ body {
 
 .ingredients-field {
     margin-top: 30px;
-    width: 760px;
+    width: 660px;
+    min-height: 180px;
+    height: auto;
     position: relative;
 }
 
 .ingredient-add-button {
     position: absolute;
-    top: 45px;
-    right: 10px;
+    top: 35px;
+    right: 120px;
     width: 40px;
     height: 40px;
     cursor: pointer;
@@ -237,65 +244,98 @@ body {
 .ingredients-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     margin-top: 15px;
 }
 
 .ingredient-item {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     background: #FFEDD2;
     border: 2px solid #9B5E2E;
     border-radius: 15px;
-    padding: 15px 20px;
+    padding: 25px 25px;
     position: relative;
-    min-height: 65px;
+    min-height: 150px;
 }
 
-.ingredient-text {
-    flex: 1;
-    font-size: 18px;
+.ingredient-name {
+    flex: 4;
+    min-width: 320px;
+    font-size: 15px;
     color: #9B5E2E;
-    background: transparent;
-    border: none;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 12px;
+    padding: 8px 12px;
     outline: none;
     font-family: inherit;
+}
+
+.ingredient-quantity {
+    width: 60px;
+    font-size: 14px;
+    color: #9B5E2E;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 12px;
+    padding: 8px 6px;
+    outline: none;
+    font-family: inherit;
+    text-align: center;
+}
+
+.ingredient-unit {
+    width: 65px;
+    font-size: 14px;
+    color: #9B5E2E;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 12px;
+    padding: 8px 6px;
+    outline: none;
+    font-family: inherit;
+    text-align: center;
 }
 
 .delete-ingredient-button {
     background: transparent;
     border: none;
     cursor: pointer;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    margin-left: 5px;
 }
 
 .delete-ingredient-button img {
-    width: 36px;
-    height: 36px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
 }
 
 /* Пошаговый рецепт */
 .steps-section {
-    margin-top: 30px;
-    width: 760px;
+    margin-top: 20px;
+    width: 750px;
     background: #FFEDD2;
     border: 3px solid #9B5E2E;
     border-radius: 20px;
     padding: 20px;
+
+    box-sizing: border-box;
+    margin-left: -150px;
 }
 
 .steps-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .steps-header label {
@@ -309,7 +349,6 @@ body {
     cursor: pointer;
     width: 50px;
     height: 50px;
-    margin-right: 5px;
 }
 
 .add-step-button img {
@@ -332,6 +371,7 @@ body {
     border: 3px solid #9B5E2E;
     border-radius: 20px;
     padding: 20px;
+  padding-top: 10px;
     position: relative;
 }
 
@@ -339,7 +379,7 @@ body {
     width: 40px;
     height: 40px;
     background: #ffffff;
-    border-radius: 50px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -416,27 +456,30 @@ body {
 }
 
 .delete-step-button img {
-    width: 36px;
-    height: 36px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
 }
 
-/* Кнопка добавления описания */
+/* Кнопки сохранения и удаления */
 .description-container {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+    width: 100%;
+    margin-left: -150px;
 }
 
 .description-button {
-    width: 100%;
-    height: 100px;
+    width: 280px;
+    height: 90px;
     background-color: #C5E0B4;
     border: 3px solid #9B5E2E;
     border-radius: 20px;
-    padding: 15px 20px;
-    font-size: 32px;
+    padding: 12px 20px;
+    font-size: 24px;
     color: #9B5E2E;
     cursor: pointer;
     text-align: center;
@@ -447,35 +490,12 @@ body {
     background-color: #b1d29b;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .information-container {
-        width: 95%;
-        margin-left: auto;
-        margin-right: auto;
-        padding: 20px;
-        flex-direction: column;
-    }
-    
-    .recipe-image-box {
-        width: 100%;
-        height: auto;
-        min-height: 300px;
-    }
-    
-    .recipe-form-fields {
-        width: 100%;
-        margin-left: 0;
-    }
-    
-    .ingredients-wrapper, .steps-section, .ingredients-field {
-        width: 100%;
-    }
-    
-    .ingredient-add-button {
-        top: 10px;
-        right: 10px;
-    }
+.save-button {
+    background-color: #C5E0B4;
 }
 
-
+.delete-button {
+    background-color: #C5E0B4;
+    border-color: #9B5E2E;
+    color: #9B5E2E;
+}

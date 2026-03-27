@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,17 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Просмотр рецепта</title>
     <link rel="stylesheet" href="css/information.css">
+    <style>
+        /* Стили для модального окна редактирования профиля */
+        .profile-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .profile-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .profile-modal-container {
+            background-color: #FFF8EE;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 3px solid #9B5E2E;
+        }
+        .profile-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 2px solid #9B5E2E;
+            background-color: #FFEDD2;
+        }
+        .profile-modal-header h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #9B5E2E;
+        }
+        .profile-modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            color: #9B5E2E;
+            transition: color 0.2s;
+            line-height: 1;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .profile-modal-close:hover {
+            color: #D46B3A;
+            background-color: #FFF3E0;
+        }
+        .profile-modal-body {
+            padding: 24px;
+        }
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #EADABC;
+        }
+        .current-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #9B5E2E;
+            margin-bottom: 15px;
+            background-color: #FFEDD2;
+        }
+        .avatar-upload-btn {
+            background-color: #C5E0B4;
+            border: 2px solid #9B5E2E;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-size: 14px;
+            color: #9B5E2E;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .avatar-upload-btn:hover {
+            background-color: #b1d29b;
+        }
+        .profile-form-field {
+            margin-bottom: 20px;
+        }
+        .profile-form-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #9B5E2E;
+            font-size: 16px;
+        }
+        .profile-form-field input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #9B5E2E;
+            border-radius: 15px;
+            font-size: 16px;
+            background: white;
+            color: #9B5E2E;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .profile-form-field input:focus {
+            outline: none;
+            border-color: #D46B3A;
+        }
+        .profile-modal-footer {
+            padding: 16px 24px;
+            border-top: 2px solid #9B5E2E;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background-color: #FFEDD2;
+        }
+        .profile-modal-btn {
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid #9B5E2E;
+            font-family: inherit;
+        }
+        .profile-modal-btn-cancel {
+            background-color: #FFF3E0;
+            color: #9B5E2E;
+        }
+        .profile-modal-btn-cancel:hover {
+            background-color: #F7EDE1;
+        }
+        .profile-modal-btn-save {
+            background-color: #C5E0B4;
+            color: #9B5E2E;
+        }
+        .profile-modal-btn-save:hover {
+            background-color: #b1d29b;
+        }
+        
+        /* Кнопка внизу */
+        .button-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        .action-button {
+            width: 320px;
+            height: 100px;
+            background-color: #C5E0B4;
+            border: 3px solid #9B5E2E;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-size: 28px;
+            color: #9B5E2E;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+        }
+        
+        .action-button:hover {
+            background-color: #b1d29b;
+        }
+    </style>
 </head>
 <body>
     <header>
        <div class="logo">
-            <a href="main.html" class="logo"><img src="/images/Logo.png" alt="Logo"></a>
+            <a href="main.html" class="logo"><img src="/images/Logo.png"></a>
         </div>
         <div class="profile-icon" id="profileIcon">
-            <img src="images/Ellipse 21.png" class="profile-img" alt="Profile">
+            <img src="images/Ellipse 21.png" class="profile-img" id="profileAvatar">
             <div class="dropdown-menu" id="dropdownMenu">
                 <a href="profile.html" class="dropdown-item">Профиль</a>
-                <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
+                <button class="dropdown-item" id="editProfileInDropdownBtn">Редактировать</button>
                 <button class="dropdown-item" id="logoutBtn">Выйти</button>
             </div>
         </div> 
@@ -28,7 +211,7 @@
         <div class="image-wrapper">
             <div class="image-label">Блюдо</div>
             <div class="recipe-image-box" id="imageBox">
-                <img src="images/default-recipe.jpg" alt="Рецепт" id="recipeImage">
+                <div class="placeholder">Изображение отсутствует</div>
             </div>
             <div class="ingredients-wrapper">
                 <div class="form-field ingredients-field">
@@ -36,55 +219,83 @@
                     <div id="ingredientsList" class="ingredients-list"></div>
                 </div>
             </div>
+        </div>
+        
+        <div class="recipe-form-fields">
+            <div class="form-field">
+                <label>Название рецепта</label>
+                <div class="field-value" id="recipeName">Классический борщ</div>
+            </div>
+            
+            <div class="form-field">
+                <label>Категории</label>
+                <div class="field-value" id="categories">Супы, Украинская кухня</div>
+            </div>
+            
+            <div class="form-field">
+                <label>Время готовки (мин.)</label>
+                <div class="field-value" id="cookingTime">90 мин.</div>
+            </div>
+            
+            <div class="form-field">
+                <label>Калории</label>
+                <div class="field-value" id="calories">250 ккал</div>
+            </div>
+            
+            <div class="form-field">
+                <label>Краткое описание</label>
+                <div class="field-value" id="description">Наваристый борщ с мясом и свеклой</div>
+            </div>
+            
             <div class="steps-section">
                 <div class="steps-header">
                     <label>Пошаговый рецепт</label>
                 </div>
                 <div id="stepsContainer" class="steps-list"></div>
             </div>
-        </div>
-        
-        <div class="recipe-form-fields">
-            <div class="form-field">
-                <label>Название рецепта</label>
-                <input type="text" id="recipeName" placeholder="Название рецепта" readonly disabled>
-            </div>
-            
-            <div class="form-field">
-                <label>Категории</label>
-                <div class="categories-input">
-                    <input type="text" id="category1" placeholder="Категория 1" readonly disabled>
-                    <input type="text" id="category2" placeholder="Категория 2" readonly disabled>
-                </div>
-            </div>
-            
-            <div class="form-field">
-                <label>Время готовки (мин.)</label>
-                <input type="number" id="cookingTime" placeholder="Время готовки" readonly disabled>
-            </div>
-            
-            <div class="form-field">
-                <label>Калории</label>
-                <input type="number" id="calories" placeholder="Количество калорий" readonly disabled>
-            </div>
-            
-            <div class="form-field">
-                <label>Краткое описание</label>
-                <textarea id="description" placeholder="Описание рецепта" readonly disabled></textarea>
-            </div>
             
             <div class="button-container">
-                <button class="action-button edit-button" id="editRecipeButton">Редактировать</button>
+                <button class="action-button edit-button" id="editProfileButton">Редактировать</button>
                 <button class="action-button chef-button" id="chefModeButton">Режим шеф-повара</button>
             </div>
         </div>
     </main>
 
+    <!-- Модальное окно для редактирования профиля (вызывается из выпадающего меню) -->
+    <div class="profile-modal-overlay" id="editProfileModal">
+        <div class="profile-modal-container">
+            <div class="profile-modal-header">
+                <h2>Смена пароля</h2>
+                <button class="profile-modal-close" id="closeProfileModalBtn">&times;</button>
+            </div>
+            <div class="profile-modal-body">
+                <div class="avatar-section">
+                    <img id="modalAvatarPreview" class="current-avatar-large" src="images/Ellipse 21.png" alt="Аватар">
+                    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                    <button class="avatar-upload-btn" id="uploadAvatarBtn">📷 Загрузить фото</button>
+                </div>
+                <div class="profile-form-field">
+                    <label>Текущий пароль</label>
+                    <input type="password" id="currentPassword" placeholder="Введите текущий пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Новый пароль</label>
+                    <input type="password" id="newPassword" placeholder="Введите новый пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Подтвердите новый пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль">
+                </div>
+            </div>
+            <div class="profile-modal-footer">
+                <button class="profile-modal-btn profile-modal-btn-cancel" id="cancelProfileModalBtn">Отмена</button>
+                <button class="profile-modal-btn profile-modal-btn-save" id="saveProfileBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const ingredientsList = document.getElementById('ingredientsList');
-        const stepsContainer = document.getElementById('stepsContainer');
-        
-        // Данные для примера (в реальном приложении будут загружаться с сервера)
+        // Данные рецепта с полной информацией по ингредиентам (название, количество, единица измерения)
         const recipeData = {
             id: 1,
             name: "Классический борщ",
@@ -94,51 +305,41 @@
             calories: 250,
             description: "Наваристый борщ с мясом и свеклой",
             ingredients: [
-                "Свекла - 2 шт",
-                "Капуста - 300 г",
-                "Картофель - 4 шт",
-                "Морковь - 1 шт",
-                "Лук - 1 шт",
-                "Говядина - 500 г"
+                { name: "Свекла", quantity: "2", unit: "шт" },
+                { name: "Капуста", quantity: "300", unit: "г" },
+                { name: "Картофель", quantity: "4", unit: "шт" },
+                { name: "Морковь", quantity: "1", unit: "шт" },
+                { name: "Лук", quantity: "1", unit: "шт" },
+                { name: "Говядина", quantity: "500", unit: "г" },
+                { name: "Томатная паста", quantity: "2", unit: "ст.л." },
+                { name: "Чеснок", quantity: "2", unit: "зубчика" },
+                { name: "Зелень", quantity: "по вкусу", unit: "" }
             ],
             steps: [
-                { text: "Сварить бульон из говядины", time: 60 },
-                { text: "Нарезать и обжарить овощи", time: 15 },
-                { text: "Добавить свеклу и тушить", time: 10 },
-                { text: "Соединить с бульоном, добавить капусту", time: 20 },
-                { text: "Варить до готовности", time: 15 }
+                { text: "Сварить бульон из говядины. Варить 1.5 часа, снимая пену.", time: 90 },
+                { text: "Нарезать лук, морковь, свеклу соломкой. Обжарить на сковороде с томатной пастой.", time: 10 },
+                { text: "Картофель нарезать кубиками, добавить в бульон.", time: 5 },
+                { text: "Добавить зажарку в бульон, варить 10 минут.", time: 10 },
+                { text: "Нашинковать капусту, добавить в суп. Варить до готовности.", time: 15 },
+                { text: "Добавить измельченный чеснок и зелень. Дать настояться.", time: 5 }
             ],
-            image: "images/borscht.jpg"
+            image: null
         };
         
-        function renderIngredients() {
-            if (!ingredientsList) return;
-            
-            if (!recipeData.ingredients || recipeData.ingredients.length === 0) {
-                ingredientsList.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
-                return;
-            }
-            
-            ingredientsList.innerHTML = recipeData.ingredients.map((ingredient, idx) => `
-                <div class="ingredient-item" data-ingredient-id="${idx}">
-                    <span class="ingredient-text">${escapeHtml(ingredient)}</span>
-                </div>
-            `).join('');
-        }
+        const stepsContainer = document.getElementById('stepsContainer');
+        const ingredientsList = document.getElementById('ingredientsList');
         
         function renderSteps() {
             if (!stepsContainer) return;
-            
             if (!recipeData.steps || recipeData.steps.length === 0) {
                 stepsContainer.innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
                 return;
             }
-            
             stepsContainer.innerHTML = recipeData.steps.map((step, idx) => `
-                <div class="step-item" data-step-id="${idx}">
+                <div class="step-item">
                     <div class="step-number">${idx + 1}</div>
                     <div class="step-content">
-                        <div class="step-text-display">${escapeHtml(step.text)}</div>
+                        <div class="step-text">${escapeHtml(step.text)}</div>
                         <div class="step-time-wrapper">
                             <span class="step-time-value">${step.time || 0}</span>
                             <span class="step-time-label">мин.</span>
@@ -148,47 +349,219 @@
             `).join('');
         }
         
-        function loadRecipeData() {
-            // Заполняем поля формы
-            document.getElementById('recipeName').value = recipeData.name || '';
-            document.getElementById('category1').value = recipeData.category1 || '';
-            document.getElementById('category2').value = recipeData.category2 || '';
-            document.getElementById('cookingTime').value = recipeData.cookingTime || '';
-            document.getElementById('calories').value = recipeData.calories || '';
-            document.getElementById('description').value = recipeData.description || '';
+        function renderIngredients() {
+            if (!ingredientsList) return;
             
-            // Загружаем изображение
-            const recipeImage = document.getElementById('recipeImage');
-            if (recipeData.image) {
-                recipeImage.src = recipeData.image;
-                recipeImage.style.display = 'block';
-            } else {
-                recipeImage.style.display = 'none';
-                const placeholder = document.createElement('div');
-                placeholder.className = 'placeholder';
-                placeholder.textContent = 'Изображение отсутствует';
-                document.getElementById('imageBox').appendChild(placeholder);
+            if (!recipeData.ingredients || recipeData.ingredients.length === 0) {
+                ingredientsList.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+                return;
             }
             
-            // Рендерим ингредиенты и шаги
+            // Формируем полную строку ингредиента: Название - Количество Единица
+            ingredientsList.innerHTML = recipeData.ingredients.map(ingredient => {
+                let ingredientText = ingredient.name;
+                if (ingredient.quantity && ingredient.quantity.trim()) {
+                    ingredientText += ` - ${ingredient.quantity}`;
+                    if (ingredient.unit && ingredient.unit.trim()) {
+                        ingredientText += ` ${ingredient.unit}`;
+                    }
+                }
+                return `
+                    <div class="ingredient-item">
+                        <span class="ingredient-text">${escapeHtml(ingredientText)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function loadRecipeData() {
+            document.getElementById('recipeName').textContent = recipeData.name || '';
+            const categories = [];
+            if (recipeData.category1) categories.push(recipeData.category1);
+            if (recipeData.category2) categories.push(recipeData.category2);
+            document.getElementById('categories').textContent = categories.join(', ') || 'Не указано';
+            document.getElementById('cookingTime').textContent = recipeData.cookingTime ? `${recipeData.cookingTime} мин.` : 'Не указано';
+            document.getElementById('calories').textContent = recipeData.calories ? `${recipeData.calories} ккал` : 'Не указано';
+            document.getElementById('description').textContent = recipeData.description || 'Описание отсутствует';
             renderIngredients();
             renderSteps();
         }
         
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
+        
+        // ========== УПРАВЛЕНИЕ АВАТАРОМ ==========
+        let currentAvatarUrl = localStorage.getItem('userAvatar') || 'images/Ellipse 21.png';
+        
+        function updateAvatarDisplay() {
+            const profileAvatar = document.getElementById('profileAvatar');
+            const modalAvatarPreview = document.getElementById('modalAvatarPreview');
+            if (profileAvatar) profileAvatar.src = currentAvatarUrl;
+            if (modalAvatarPreview) modalAvatarPreview.src = currentAvatarUrl;
+        }
+        
+        // ========== МОДАЛЬНОЕ ОКНО ДЛЯ СМЕНЫ ПАРОЛЯ ==========
+        const profileModal = document.getElementById('editProfileModal');
+        const editProfileInDropdownBtn = document.getElementById('editProfileInDropdownBtn');
+        const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
+        const cancelProfileModalBtn = document.getElementById('cancelProfileModalBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+        const avatarUpload = document.getElementById('avatarUpload');
+        const modalAvatarPreview = document.getElementById('modalAvatarPreview');
+        
+        let tempAvatarUrl = currentAvatarUrl;
+        
+        function loadProfileData() {
+            const currentPasswordInput = document.getElementById('currentPassword');
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            if (currentPasswordInput) currentPasswordInput.value = '';
+            if (newPasswordInput) newPasswordInput.value = '';
+            if (confirmPasswordInput) confirmPasswordInput.value = '';
+            tempAvatarUrl = currentAvatarUrl;
+            if (modalAvatarPreview) modalAvatarPreview.src = tempAvatarUrl;
+        }
+        
+        function saveProfileData() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword) {
+                alert('Введите текущий пароль');
+                return false;
+            }
+            if (!newPassword) {
+                alert('Введите новый пароль');
+                return false;
+            }
+            if (newPassword.length < 4) {
+                alert('Новый пароль должен содержать не менее 4 символов');
+                return false;
+            }
+            if (newPassword !== confirmPassword) {
+                alert('Новый пароль и подтверждение не совпадают');
+                return false;
+            }
+            
+            // Здесь должен быть запрос к серверу для проверки текущего пароля и смены пароля
+            localStorage.setItem('userPassword', newPassword);
+            
+            if (tempAvatarUrl) {
+                currentAvatarUrl = tempAvatarUrl;
+                localStorage.setItem('userAvatar', currentAvatarUrl);
+                updateAvatarDisplay();
+            }
+            
+            return true;
+        }
+        
+        function openProfileModal() {
+            loadProfileData();
+            profileModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeProfileModal() {
+            profileModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        if (editProfileInDropdownBtn) {
+            editProfileInDropdownBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const dropdownMenu = document.getElementById('dropdownMenu');
+                if (dropdownMenu) dropdownMenu.classList.remove('show');
+                openProfileModal();
+            });
+        }
+        
+        if (closeProfileModalBtn) closeProfileModalBtn.addEventListener('click', closeProfileModal);
+        if (cancelProfileModalBtn) cancelProfileModalBtn.addEventListener('click', closeProfileModal);
+        
+        if (saveProfileBtn) {
+            saveProfileBtn.addEventListener('click', () => {
+                if (saveProfileData()) {
+                    closeProfileModal();
+                    showNotification('Пароль успешно изменен!');
+                }
+            });
+        }
+        
+        if (profileModal) {
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) closeProfileModal();
+            });
+        }
+        
+        // Загрузка аватара
+        if (uploadAvatarBtn) {
+            uploadAvatarBtn.addEventListener('click', () => {
+                avatarUpload.click();
+            });
+        }
+        
+        if (avatarUpload) {
+            avatarUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        tempAvatarUrl = event.target.result;
+                        if (modalAvatarPreview) modalAvatarPreview.src = tempAvatarUrl;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file) {
+                    alert('Пожалуйста, выберите изображение');
+                }
+            });
+        }
+        
+        // ========== КНОПКА "РЕДАКТИРОВАТЬ" ВНИЗУ - ПЕРЕХОД НА PROFILE.HTML ==========
+        const editProfileButton = document.getElementById('editProfileButton');
+        if (editProfileButton) {
+            editProfileButton.addEventListener('click', () => {
+                window.location.href = 'edit-recipe.html';
+            });
+        }
+        
+        // ========== КНОПКА "РЕЖИМ ШЕФ-ПОВАРА" ==========
+        const chefModeButton = document.getElementById('chefModeButton');
+        if (chefModeButton) {
+            chefModeButton.addEventListener('click', () => {
+                localStorage.setItem('chefRecipeData', JSON.stringify(recipeData));
+                window.location.href = 'chef.html';
+            });
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; background-color: #5A8F4C;
+                color: white; padding: 12px 24px; border-radius: 20px; font-size: 16px;
+                z-index: 1100; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => { if (notification.parentElement) notification.remove(); }, 300);
+            }, 3000);
+        }
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        `;
+        document.head.appendChild(styleSheet);
         
         // Выпадающее меню профиля
         const profileIcon = document.getElementById('profileIcon');
         const dropdownMenu = document.getElementById('dropdownMenu');
-        const editProfileBtn = document.getElementById('editProfileBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         
         if (profileIcon) {
@@ -197,22 +570,8 @@
                 dropdownMenu.classList.toggle('show');
             });
         }
-        
-        document.addEventListener('click', () => {
-            if (dropdownMenu) dropdownMenu.classList.remove('show');
-        });
-        
-        if (dropdownMenu) {
-            dropdownMenu.addEventListener('click', (event) => {
-                event.stopPropagation();
-            });
-        }
-        
-        if (editProfileBtn) {
-            editProfileBtn.addEventListener('click', () => {
-                window.location.href = 'profile.html';
-            });
-        }
+        document.addEventListener('click', () => { if (dropdownMenu) dropdownMenu.classList.remove('show'); });
+        if (dropdownMenu) dropdownMenu.addEventListener('click', (event) => { event.stopPropagation(); });
         
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
@@ -222,27 +581,9 @@
             });
         }
         
-        // Кнопки действий
-        const editRecipeButton = document.getElementById('editRecipeButton');
-        const chefModeButton = document.getElementById('chefModeButton');
+        // Загрузка аватара при старте
+        updateAvatarDisplay();
         
-        if (editRecipeButton) {
-            editRecipeButton.addEventListener('click', () => {
-                // Сохраняем ID рецепта в localStorage для загрузки на странице редактирования
-                localStorage.setItem('currentRecipeId', recipeData.id);
-                window.location.href = 'edit-recipe.html';
-            });
-        }
-        
-        if (chefModeButton) {
-            chefModeButton.addEventListener('click', () => {
-                // Сохраняем данные рецепта для режима шеф-повара
-                localStorage.setItem('chefRecipeData', JSON.stringify(recipeData));
-                window.location.href = 'chef.html';
-            });
-        }
-        
-        // Загружаем данные при загрузке страницы
         document.addEventListener('DOMContentLoaded', loadRecipeData);
     </script>
 </body>
