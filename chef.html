@@ -173,7 +173,7 @@
         let currentAvatarUrl = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
-        // ========== ФУНКЦИИ АВТОРИЗАЦИИ ==========
+        // Функции авторизации
         function getToken() {
             return localStorage.getItem('authToken');
         }
@@ -199,7 +199,7 @@
             }, 3000);
         }
         
-        // ========== УПРАВЛЕНИЕ ИКОНКОЙ ПРОФИЛЯ ==========
+        // Управление иконкой профиля
         function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
             const profileIcon = document.getElementById('profileIcon');
@@ -277,7 +277,7 @@
             }
         }
         
-        // ========== МОДАЛЬНОЕ ОКНО ==========
+        // Модальное окно
         const modal = document.getElementById('editProfileModal');
         
         function openModal() {
@@ -388,7 +388,7 @@
         document.getElementById('saveProfileBtn').onclick = saveProfile;
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
         
-        // ========== API ЗАПРОСЫ ==========
+        // Api запросы
         async function apiCall(url, options = {}) {
             const token = getToken();
             const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -408,7 +408,7 @@
             return response.json();
         }
         
-        // ========== ТАЙМЕР И ШАГИ ==========
+        // Таймер и шаги готовки
         function stopTimer() {
             if (timerInterval) {
                 clearInterval(timerInterval);
@@ -547,12 +547,12 @@
             }
         }
         
-        // ========== ОБРАБОТЧИКИ ==========
+        // Обработчики
         document.getElementById('nextButton').addEventListener('click', nextStep);
         document.getElementById('prevButton').addEventListener('click', prevStep);
         document.getElementById('timerControlBtn').addEventListener('click', pauseTimer);
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             initProfileDropdown();
             updateAuthUI();

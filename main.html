@@ -146,7 +146,7 @@
         let currentAvatarUrl = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
-        // ========== ФУНКЦИИ АВТОРИЗАЦИИ ==========
+        // Функции авторизации
         function getToken() {
             return localStorage.getItem('authToken');
         }
@@ -172,7 +172,7 @@
             }, 3000);
         }
         
-        // ========== УПРАВЛЕНИЕ ИКОНКОЙ ПРОФИЛЯ ==========
+        // Управление иконкой профиля
         function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
             const profileIcon = document.getElementById('profileIcon');
@@ -249,7 +249,7 @@
             }
         }
         
-        // ========== МОДАЛЬНОЕ ОКНО ==========
+        // Модальное окно
         const modal = document.getElementById('editProfileModal');
         
         function openModal() {
@@ -380,7 +380,7 @@
             return response.json();
         }
         
-        // ========== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
+        //Загрузка данных пользователя
         async function loadUserData() {
             if (!isAuthenticated()) {
                 return;
@@ -400,7 +400,7 @@
             }
         }
         
-        // ========== ЗАГРУЗКА РЕЦЕПТОВ ==========
+        // Загрузка рецептов
         async function loadRecipes() {
             try {
                 const container = document.getElementById('recipesContainer');
@@ -421,7 +421,7 @@
             }
         }
         
-        // ========== ЗАГРУЗКА ИЗБРАННОГО ПОЛЬЗОВАТЕЛЯ ==========
+        // Загрузка избранных
         async function loadUserFavorites() {
             try {
                 const favorites = await apiCall('/favorites/');
@@ -435,7 +435,7 @@
             }
         }
         
-        // ========== ДОБАВЛЕНИЕ/УДАЛЕНИЕ ИЗ ИЗБРАННОГО ==========
+        // Добавление удаление из избранного
         async function toggleFavorite(recipeId, event) {
             event.stopPropagation();
             
@@ -491,7 +491,7 @@
             }
         }
         
-        // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С КАРТОЧКАМИ ==========
+        // Функции для работы с карточками
         function goToRecipePage(recipeId) {
             window.location.href = `information.html?id=${recipeId}`;
         }
@@ -582,7 +582,7 @@
             }
         }
         
-        // ========== ФИЛЬТРАЦИЯ И СОРТИРОВКА ==========
+        // Фильтрация и сортировка
         function filterAndSortRecipes() {
             let filtered = [...allRecipes];
             
@@ -616,7 +616,7 @@
             filterAndSortRecipes();
         }
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // Инициализация
         document.addEventListener('DOMContentLoaded', async () => {
             initProfileDropdown();
             updateAuthUI();

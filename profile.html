@@ -113,7 +113,7 @@
         let currentAvatarUrl = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        // Вспомогательные функции
         function getToken() {
             return localStorage.getItem('authToken');
         }
@@ -168,7 +168,7 @@
             });
         }
         
-        // ========== ЗАГРУЗКА ДАННЫХ ==========
+        // Загрузка данных
         async function loadUserData() {
             try {
                 const userId = getUserId();
@@ -222,7 +222,7 @@
             }
         }
         
-        // ========== ДОБАВЛЕНИЕ/УДАЛЕНИЕ ИЗ ИЗБРАННОГО ==========
+        // Добавление и удаление из избранного
         async function toggleFavorite(recipeId, event) {
             event.stopPropagation();
             
@@ -272,7 +272,7 @@
             }
         }
         
-        // ========== ОТОБРАЖЕНИЕ КАРТОЧЕК (как в main) ==========
+        // Отображение карточек рецепта
         function displayRecipes(recipes) {
             const container = document.getElementById('recipesList');
             
@@ -343,12 +343,12 @@
             displayRecipes(recipesToShow);
         }
         
-        // ========== ДЕЙСТВИЯ С РЕЦЕПТАМИ ==========
+        // Действия с рецептами
         function goToRecipe(recipeId) {
             window.location.href = `information.html?id=${recipeId}`;
         }
         
-        // ========== МОДАЛЬНОЕ ОКНО (независимые операции) ==========
+        // Модальное окно
         const modal = document.getElementById('editProfileModal');
         
         function openModal() {
@@ -453,14 +453,14 @@
             }
         };
         
-        // ========== ВЫХОД ==========
+        // Выход
         function logout() {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userId');
             window.location.href = 'enter.html';
         }
         
-        // ========== ВЫПАДАЮЩЕЕ МЕНЮ ==========
+        // Выпадающее меню
         function initDropdown() {
             const profileIcon = document.getElementById('profileIcon');
             const dropdownMenu = document.getElementById('dropdownMenu');
@@ -479,7 +479,7 @@
             });
         }
         
-        // ========== ОБРАБОТЧИКИ КНОПОК ==========
+        // Обработчики кнопок
         document.getElementById('addRecipeButton').onclick = () => {
             window.location.href = 'add-recipe.html';
         };
@@ -514,7 +514,7 @@
         
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        //Инициализация
         async function init() {
             initDropdown();
             await loadUserData();

@@ -169,7 +169,7 @@
         let currentAvatarUrl = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        // Вспомогательные функции
         function getToken() {
             return localStorage.getItem('authToken');
         }
@@ -231,7 +231,7 @@
             }
         }
         
-        // ========== ЗАЩИТА ОТ ОТРИЦАТЕЛЬНЫХ ЧИСЕЛ ==========
+        // Защита от отрицательных чисел в полях ввода
         function protectNumberField(field) {
             if (!field) return;
             
@@ -250,7 +250,7 @@
             sanitizeValue();
         }
         
-        // ========== ОТОБРАЖЕНИЕ ИНГРЕДИЕНТОВ ==========
+        // Отображение ингредиентов
         function renderIngredients() {
             const container = document.getElementById('ingredientsList');
             if (!container) return;
@@ -324,7 +324,7 @@
             }, 30);
         }
         
-        // ========== ОТОБРАЖЕНИЕ ШАГОВ ==========
+        // Отображение шагов
         function renderSteps() {
             const container = document.getElementById('stepsContainer');
             if (!container) return;
@@ -394,7 +394,7 @@
             }, 30);
         }
         
-        // ========== СОЗДАНИЕ РЕЦЕПТА ==========
+        // Создание рецепта
         async function createRecipe() {
             if (!isAuthenticated()) {
                 showNotification('Пожалуйста, войдите в систему', true);
@@ -509,7 +509,7 @@
             }
         }
         
-        // ========== ЗАГРУЗКА АВАТАРА ==========
+        // Загрузка аватара
         async function loadUserAvatar() {
             try {
                 const userId = getUserId();
@@ -526,7 +526,7 @@
             }
         }
         
-        // ========== МОДАЛЬНОЕ ОКНО (независимые операции) ==========
+        // Модальное окно профиля
         const modal = document.getElementById('editProfileModal');
         
         function openModal() {
@@ -615,7 +615,7 @@
             }
         }
         
-        // ========== ЗАГРУЗКА АВАТАРА В МОДАЛЬНОМ ОКНЕ ==========
+        // Загрузка аватарки пользователя
         document.getElementById('uploadAvatarBtn').onclick = () => document.getElementById('avatarUpload').click();
         document.getElementById('avatarUpload').onchange = (e) => {
             const file = e.target.files[0];
@@ -631,7 +631,7 @@
             }
         };
         
-        // ========== ВЫБОР ФОТО ДЛЯ РЕЦЕПТА ==========
+        // Выбор фото для рецепта
         const imageBox = document.getElementById('imageBox');
         if (imageBox) {
             imageBox.addEventListener('click', () => {
@@ -663,7 +663,7 @@
             });
         }
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // Инициализация
         document.getElementById('addIngredientButton').addEventListener('click', addNewIngredient);
         document.getElementById('addStepButton').addEventListener('click', addNewStep);
         document.getElementById('addRecipeButton').addEventListener('click', createRecipe);

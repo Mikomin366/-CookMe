@@ -206,7 +206,7 @@
         let currentAvatarUrl = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
-        // ========== ФУНКЦИИ АВТОРИЗАЦИИ ==========
+        // Функции авторизации
         function getToken() {
             return localStorage.getItem('authToken');
         }
@@ -232,7 +232,7 @@
             }, 3000);
         }
         
-        // ========== УПРАВЛЕНИЕ ИКОНКОЙ ПРОФИЛЯ ==========
+        // Управление иконкой профиля
         function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
             const profileIcon = document.getElementById('profileIcon');
@@ -315,7 +315,7 @@
             }
         }
         
-        // ========== МОДАЛЬНОЕ ОКНО ==========
+        // Модальное окно
         const modal = document.getElementById('editProfileModal');
         
         function openModal() {
@@ -426,7 +426,7 @@
         document.getElementById('saveProfileBtn').onclick = saveProfile;
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
         
-        // ========== API ЗАПРОСЫ ==========
+        // Api запросы
         async function apiCall(url, options = {}) {
             const token = getToken();
             const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -562,7 +562,7 @@
             document.getElementById('stepsContainer').innerHTML = '<div class="empty-message">Шаги приготовления не указаны</div>';
         }
         
-        // ========== ВЫГРУЗКА PDF ==========
+        // Выгрузка PDF
         async function exportToPdf() {
             if (!currentRecipe) {
                 showNotification('Данные рецепта не загружены', true);

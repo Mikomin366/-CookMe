@@ -161,7 +161,7 @@
     <script>
         const API_BASE_URL = 'http://localhost:8000/api';
         
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        // Вспомогательные функции
         const getToken = () => localStorage.getItem('authToken');
         const getUserId = () => localStorage.getItem('userId');
         
@@ -192,7 +192,7 @@
             return res.json();
         };
         
-        // ========== АВАТАР И ПРОФИЛЬ ==========
+        // Аватар и профиль
         let currentAvatar = 'images/Ellipse 21.png';
         let tempAvatarFile = null;
         
@@ -209,7 +209,7 @@
             }
         };
         
-        // ========== ЗАЩИТА ОТ ОТРИЦАТЕЛЬНЫХ ЧИСЕЛ ==========
+        // Защита от отрицательных чисел
         const protectNumberField = (field) => {
             if (!field) return;
             
