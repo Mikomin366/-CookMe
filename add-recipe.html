@@ -95,12 +95,12 @@
             
             <div class="form-field">
                 <label>Время готовки (мин.)</label>
-                <input type="number" id="cookingTime" placeholder="Введите время готовки">
+                <input type="number" id="cookingTime" placeholder="Введите время готовки" min="0" step="1" value="0">
             </div>
             
             <div class="form-field">
                 <label>Калории</label>
-                <input type="number" id="calories" placeholder="Введите количество калорий">
+                <input type="number" id="calories" placeholder="Введите количество калорий" min="0" step="1" value="0">
             </div>
             
             <div class="form-field">
@@ -231,6 +231,25 @@
             }
         }
         
+        // ========== ЗАЩИТА ОТ ОТРИЦАТЕЛЬНЫХ ЧИСЕЛ ==========
+        function protectNumberField(field) {
+            if (!field) return;
+            
+            const sanitizeValue = () => {
+                let value = parseFloat(field.value);
+                if (isNaN(value)) value = 0;
+                if (value < 0) value = 0;
+                field.value = value;
+            };
+            
+            field.addEventListener('input', sanitizeValue);
+            field.addEventListener('change', sanitizeValue);
+            field.addEventListener('blur', sanitizeValue);
+            
+            // Инициализация
+            sanitizeValue();
+        }
+        
         // ========== ОТОБРАЖЕНИЕ ИНГРЕДИЕНТОВ ==========
         function renderIngredients() {
             const container = document.getElementById('ingredientsList');
@@ -245,7 +264,7 @@
             container.innerHTML = ingredients.map(ing => `
                 <div class="ingredient-item" data-ingredient-id="${ing.id}">
                     <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название">
-                    <input type="text" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || '')}" placeholder="Кол-во">
+                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || 0)}" placeholder="Кол-во" step="0.1" min="0">
                     <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
                     <button class="delete-ingredient-button" data-ingredient-id="${ing.id}">
                         <img src="images/delete.png" alt="Удалить">
@@ -263,6 +282,7 @@
             
             document.querySelectorAll('.ingredient-quantity').forEach(input => {
                 const ingredientId = parseInt(input.getAttribute('data-ingredient-id'));
+                protectNumberField(input);
                 input.addEventListener('input', (e) => {
                     const ingredient = ingredients.find(i => i.id === ingredientId);
                     if (ingredient) ingredient.quantity = e.target.value;
@@ -294,7 +314,7 @@
             ingredients.push({
                 id: newId,
                 name: '',
-                quantity: '',
+                quantity: '0',
                 unit: ''
             });
             renderIngredients();
@@ -321,7 +341,7 @@
                     <div class="step-content">
                         <textarea class="step-textarea" data-step-id="${step.id}" placeholder="Опишите шаг приготовления...">${escapeHtml(step.text)}</textarea>
                         <div class="step-time-wrapper">
-                            <input type="number" class="step-time-input" data-step-id="${step.id}" value="${step.time || ''}" placeholder="Время">
+                            <input type="number" class="step-time-input" data-step-id="${step.id}" value="${step.time || 0}" placeholder="Время" min="0" step="1">
                             <span class="step-time-label">мин.</span>
                         </div>
                     </div>
@@ -341,6 +361,7 @@
             
             document.querySelectorAll('.step-time-input').forEach(input => {
                 const stepId = parseInt(input.getAttribute('data-step-id'));
+                protectNumberField(input);
                 input.addEventListener('input', (e) => {
                     const step = steps.find(s => s.id === stepId);
                     if (step) step.time = e.target.value;
@@ -364,7 +385,7 @@
             steps.push({
                 id: newId,
                 text: '',
-                time: ''
+                time: '0'
             });
             renderSteps();
             setTimeout(() => {
@@ -386,26 +407,45 @@
             const recipeName = document.getElementById('recipeName').value.trim();
             const category1 = document.getElementById('category1').value.trim();
             const category2 = document.getElementById('category2').value.trim();
-            const cookingTime = parseInt(document.getElementById('cookingTime').value) || 0;
-            const calories = parseInt(document.getElementById('calories').value) || 0;
+            
+            // Получаем значения с защитой от отрицательных
+            let cookingTime = parseInt(document.getElementById('cookingTime').value) || 0;
+            let calories = parseInt(document.getElementById('calories').value) || 0;
+            
+            // Принудительная защита
+            cookingTime = Math.max(0, cookingTime);
+            calories = Math.max(0, calories);
+            
             const description = document.getElementById('description').value.trim();
             
             const ingredientsData = ingredients
                 .filter(ing => ing.name && ing.name.trim() !== '')
-                .map(ing => ({
-                    name: ing.name.trim(),
-                    quantity: ing.quantity || '',
-                    unit: ing.unit || ''
-                }));
+                .map(ing => {
+                    let quantity = ing.quantity || '';
+                    if (quantity !== '') {
+                        let numQuantity = parseFloat(quantity);
+                        if (!isNaN(numQuantity) && numQuantity < 0) quantity = '0';
+                        if (!isNaN(numQuantity) && numQuantity > 0) quantity = numQuantity.toString();
+                    }
+                    return {
+                        name: ing.name.trim(),
+                        quantity: quantity,
+                        unit: ing.unit || ''
+                    };
+                });
             
             let stepOrder = 1;
             const stepsData = steps
                 .filter(step => step.text && step.text.trim() !== '')
-                .map(step => ({
-                    text: step.text.trim(),
-                    time: parseInt(step.time) || 0,
-                    order: stepOrder++
-                }));
+                .map(step => {
+                    let time = parseInt(step.time) || 0;
+                    time = Math.max(0, time);
+                    return {
+                        text: step.text.trim(),
+                        time: time,
+                        order: stepOrder++
+                    };
+                });
             
             if (!recipeName) {
                 showNotification('Пожалуйста, введите название рецепта', true);
@@ -627,6 +667,10 @@
         document.getElementById('addIngredientButton').addEventListener('click', addNewIngredient);
         document.getElementById('addStepButton').addEventListener('click', addNewStep);
         document.getElementById('addRecipeButton').addEventListener('click', createRecipe);
+        
+        // Защита основных числовых полей
+        protectNumberField(document.getElementById('cookingTime'));
+        protectNumberField(document.getElementById('calories'));
         
         // Инициализация по умолчанию
         if (steps.length === 0) addNewStep();

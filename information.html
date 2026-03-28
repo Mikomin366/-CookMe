@@ -467,11 +467,13 @@
             
             container.innerHTML = ingredients.map(ing => {
                 let text = ing.name;
-                if (ing.quantity && ing.quantity.trim()) {
-                    text += ` - ${ing.quantity}`;
+                if (ing.quantity && ing.quantity.toString().trim() !== '') {
+                    text += ` — ${ing.quantity}`;
                     if (ing.unit && ing.unit.trim()) {
                         text += ` ${ing.unit}`;
                     }
+                } else if (ing.unit && ing.unit.trim()) {
+                    text += ` — ${ing.unit}`;
                 }
                 return `<div class="ingredient-item"><span class="ingredient-text">${escapeHtml(text)}</span></div>`;
             }).join('');

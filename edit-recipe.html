@@ -95,12 +95,12 @@
             
             <div class="form-field">
                 <label>Время готовки (мин.)</label>
-                <input type="number" id="cookingTime" placeholder="Введите время готовки">
+                <input type="number" id="cookingTime" placeholder="Введите время готовки" min="0" step="1">
             </div>
             
             <div class="form-field">
                 <label>Калории</label>
-                <input type="number" id="calories" placeholder="Введите количество калорий">
+                <input type="number" id="calories" placeholder="Введите количество калорий" min="0" step="1">
             </div>
             
             <div class="form-field">
@@ -209,7 +209,26 @@
             }
         };
         
-        // ========== МОДАЛЬНОЕ ОКНО (независимые операции) ==========
+        // ========== ЗАЩИТА ОТ ОТРИЦАТЕЛЬНЫХ ЧИСЕЛ ==========
+        const protectNumberField = (field) => {
+            if (!field) return;
+            
+            const sanitizeValue = () => {
+                let value = parseFloat(field.value);
+                if (isNaN(value)) value = 0;
+                if (value < 0) value = 0;
+                field.value = value;
+            };
+            
+            field.addEventListener('input', sanitizeValue);
+            field.addEventListener('change', sanitizeValue);
+            field.addEventListener('blur', sanitizeValue);
+            
+            // Инициализация
+            sanitizeValue();
+        };
+        
+        // ========== МОДАЛЬНОЕ ОКНО ==========
         const modal = document.getElementById('editProfileModal');
         
         const openModal = () => {
@@ -344,20 +363,27 @@
                 document.getElementById('recipeName').value = recipe.name || '';
                 document.getElementById('category1').value = recipe.category1 || '';
                 document.getElementById('category2').value = recipe.category2 || '';
-                document.getElementById('cookingTime').value = recipe.cooking_time || '';
-                document.getElementById('calories').value = recipe.calories || '';
+                document.getElementById('cookingTime').value = recipe.cooking_time || 0;
+                document.getElementById('calories').value = recipe.calories || 0;
                 document.getElementById('description').value = recipe.description || '';
+                
+                // Защита числовых полей
+                protectNumberField(document.getElementById('cookingTime'));
+                protectNumberField(document.getElementById('calories'));
                 
                 if (recipe.ingredients?.length) {
                     const container = document.getElementById('ingredientsList');
                     container.innerHTML = recipe.ingredients.map(ing => `
                         <div class="ingredient-item">
                             <input type="text" class="ingredient-name" value="${escapeHtml(ing.name)}" placeholder="Название">
-                            <input type="text" class="ingredient-quantity" value="${escapeHtml(ing.quantity)}" placeholder="Кол-во">
+                            <input type="number" class="ingredient-quantity" value="${escapeHtml(ing.quantity || 0)}" placeholder="Кол-во" step="0.1" min="0">
                             <input type="text" class="ingredient-unit" value="${escapeHtml(ing.unit)}" placeholder="шт/г/кг">
                             <button class="delete-ingredient-button"><img src="images/delete.png"></button>
                         </div>
                     `).join('');
+                    
+                    // Защита полей количества ингредиентов
+                    document.querySelectorAll('.ingredient-quantity').forEach(protectNumberField);
                 }
                 
                 if (recipe.steps?.length) {
@@ -368,13 +394,16 @@
                             <div class="step-content">
                                 <textarea class="step-textarea" placeholder="Опишите шаг...">${escapeHtml(step.text)}</textarea>
                                 <div class="step-time-wrapper">
-                                    <input type="number" class="step-time-input" value="${step.time || ''}" placeholder="Время">
+                                    <input type="number" class="step-time-input" value="${step.time || 0}" placeholder="Время" min="0">
                                     <span class="step-time-label">мин.</span>
                                 </div>
                             </div>
                             <button class="delete-step-button"><img src="images/delete.png"></button>
                         </div>
                     `).join('');
+                    
+                    // Защита полей времени шагов
+                    document.querySelectorAll('.step-time-input').forEach(protectNumberField);
                 }
                 
                 if (recipe.image) {
@@ -390,12 +419,20 @@
         
         // Сохранение рецепта
         document.getElementById('saveRecipeButton').onclick = async () => {
+            // Получаем значения с защитой от отрицательных
+            let cookingTime = parseInt(document.getElementById('cookingTime').value) || 0;
+            let calories = parseInt(document.getElementById('calories').value) || 0;
+            
+            // Принудительная защита
+            cookingTime = Math.max(0, cookingTime);
+            calories = Math.max(0, calories);
+            
             const recipeData = {
                 name: document.getElementById('recipeName').value.trim(),
                 category1: document.getElementById('category1').value.trim(),
                 category2: document.getElementById('category2').value.trim(),
-                cooking_time: parseInt(document.getElementById('cookingTime').value) || 0,
-                calories: parseInt(document.getElementById('calories').value) || 0,
+                cooking_time: cookingTime,
+                calories: calories,
                 description: document.getElementById('description').value.trim(),
                 ingredients: [],
                 steps: []
@@ -404,9 +441,16 @@
             document.querySelectorAll('.ingredient-item').forEach(item => {
                 const name = item.querySelector('.ingredient-name')?.value.trim();
                 if (name) {
+                    let quantity = item.querySelector('.ingredient-quantity')?.value || '';
+                    if (quantity !== '') {
+                        let numQuantity = parseFloat(quantity);
+                        if (!isNaN(numQuantity) && numQuantity < 0) quantity = '0';
+                        if (!isNaN(numQuantity) && numQuantity > 0) quantity = numQuantity.toString();
+                    }
+                    
                     recipeData.ingredients.push({
                         name: name,
-                        quantity: item.querySelector('.ingredient-quantity')?.value || '',
+                        quantity: quantity,
                         unit: item.querySelector('.ingredient-unit')?.value || ''
                     });
                 }
@@ -416,9 +460,12 @@
             document.querySelectorAll('.step-item').forEach(item => {
                 const text = item.querySelector('.step-textarea')?.value.trim();
                 if (text) {
+                    let time = parseInt(item.querySelector('.step-time-input')?.value) || 0;
+                    time = Math.max(0, time);
+                    
                     recipeData.steps.push({
                         text: text,
-                        time: parseInt(item.querySelector('.step-time-input')?.value) || 0,
+                        time: time,
                         order: order++
                     });
                 }
@@ -510,22 +557,28 @@
             input.click();
         };
         
-        // Добавление ингредиента
+        // Добавление ингредиента с защитой
         document.getElementById('addIngredientButton').onclick = () => {
             const container = document.getElementById('ingredientsList');
             const div = document.createElement('div');
             div.className = 'ingredient-item';
             div.innerHTML = `
                 <input type="text" class="ingredient-name" placeholder="Название">
-                <input type="text" class="ingredient-quantity" placeholder="Кол-во">
+                <input type="number" class="ingredient-quantity" placeholder="Кол-во" step="0.1" min="0" value="0">
                 <input type="text" class="ingredient-unit" placeholder="шт/г/кг">
                 <button class="delete-ingredient-button"><img src="images/delete.png"></button>
             `;
+            
+            // Защита нового поля количества
+            const quantityInput = div.querySelector('.ingredient-quantity');
+            protectNumberField(quantityInput);
+            
             div.querySelector('.delete-ingredient-button').onclick = () => div.remove();
             container.appendChild(div);
+            quantityInput.focus();
         };
         
-        // Добавление шага
+        // Добавление шага с защитой
         document.getElementById('addStepButton').onclick = () => {
             const container = document.getElementById('stepsContainer');
             const div = document.createElement('div');
@@ -536,12 +589,17 @@
                 <div class="step-content">
                     <textarea class="step-textarea" placeholder="Опишите шаг приготовления..."></textarea>
                     <div class="step-time-wrapper">
-                        <input type="number" class="step-time-input" placeholder="Время">
+                        <input type="number" class="step-time-input" placeholder="Время" min="0" value="0">
                         <span class="step-time-label">мин.</span>
                     </div>
                 </div>
                 <button class="delete-step-button"><img src="images/delete.png"></button>
             `;
+            
+            // Защита нового поля времени
+            const timeInput = div.querySelector('.step-time-input');
+            protectNumberField(timeInput);
+            
             div.querySelector('.delete-step-button').onclick = () => {
                 div.remove();
                 document.querySelectorAll('.step-item').forEach((item, i) => {
@@ -549,6 +607,7 @@
                 });
             };
             container.appendChild(div);
+            div.querySelector('.step-textarea').focus();
         };
         
         const escapeHtml = (str) => {
@@ -564,11 +623,15 @@
         // Выпадающее меню
         const profileIcon = document.getElementById('profileIcon');
         const dropdownMenu = document.getElementById('dropdownMenu');
-        profileIcon.onclick = (e) => {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('show');
+        if (profileIcon) {
+            profileIcon.onclick = (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            };
+        }
+        document.onclick = () => {
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
         };
-        document.onclick = () => dropdownMenu.classList.remove('show');
         
         // Выход
         document.getElementById('logoutBtn').onclick = () => {
@@ -577,9 +640,17 @@
             location.href = 'enter.html';
         };
         
-        // Инициализация
-        loadUserAvatar();
-        loadRecipe();
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        const init = async () => {
+            await loadUserAvatar();
+            await loadRecipe();
+            
+            // Дополнительная защита для существующих полей
+            protectNumberField(document.getElementById('cookingTime'));
+            protectNumberField(document.getElementById('calories'));
+        };
+        
+        init();
     </script>
 </body>
 </html>
