@@ -1,3 +1,4 @@
+/* main.css */
 
 header {
     display: flex;
@@ -17,8 +18,8 @@ header {
 .auth-buttons {
     margin-left: auto;
     margin-right: -100px;
-
 }
+
 .enter-button {
     font-size: 24px;
     color: #9B5E2E;
@@ -27,8 +28,9 @@ header {
     padding: 16px 40px;
     border: 3px solid #9B5E2E;
     border-radius: 20px;
-    margin-right: 12px;    
+    margin-right: 12px;
 }
+
 .register-button {
     font-size: 24px;
     color: #9B5E2E;
@@ -40,6 +42,67 @@ header {
     margin-right: 12px;
 }
 
+/* Иконка профиля */
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #9B5E2E;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 70px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 150px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 14px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.dropdown-item:first-child {
+    border-radius: 13px 13px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 13px 13px;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
+}
+
 body {
     background-color: #FFF3E0;
     display: flex;
@@ -47,6 +110,7 @@ body {
     align-items: center;
     justify-content: center;
 }
+
 .main-container {
     width: 1225px;
     height: 800px;
@@ -60,10 +124,7 @@ body {
     padding-right: 64px;
     padding-bottom: 81px;
     margin-right: -375px;
-    
 }
-
-
 
 /* Фильтр */
 .filter-group {
@@ -89,7 +150,6 @@ body {
     padding-right: 20px;
 }
 
-
 /* Поисковая строка */
 .search-input {
     background-color: white;
@@ -105,22 +165,17 @@ body {
     color: #9B5E2E;
 }
 
-/* Главный контейнер */
-
 .catalog-title {
     font-size: 42px;
     color: #9B5E2E;
     padding-left: 80px;
 }
 
-
-
-
 .main-layout {
     display: flex;
     gap: 40px;
     margin-left: 110px;
-     margin-right: 110px;
+    margin-right: 110px;
     margin-bottom: 105px;
     align-items: flex-start;
 }
@@ -129,10 +184,8 @@ body {
 .recipe-day-container {
     width: 280px;
     margin-left: -350px;
-            
 }
 
-/* Заголовок над контейнером */
 .recipe-day-title {
     text-align: left;
     color: #9B5E2E;
@@ -141,7 +194,6 @@ body {
     padding-left: 5px;
 }
 
-/* Контейнер рецепта дня */
 .recipe-day-box {
     background: #FFEDD2;
     border-radius: 20px;
@@ -156,7 +208,6 @@ body {
     justify-content: center;
 }
 
-/* Декоративные кружки */
 .day-decorative-circles {
     position: absolute;
     top: 20px;
@@ -185,7 +236,6 @@ body {
     border-radius: 50%;
 }
 
-/* Текст внутри контейнера */
 .recipe-day-text {
     margin-top: 40px;
     color: #9B5E2E;
@@ -196,8 +246,7 @@ body {
 .recipe-day-text p {
     margin: 12px 0;
 }
-        
-/* Правый контейнер main-container */
+
 .main-container {
     flex: 1;
     background: #FFF8EE;
@@ -207,10 +256,9 @@ body {
     padding-right: 64px;
     padding-bottom: 81px;
     padding-top: 0;
-
 }
-        
-        /* Контейнер для всех карточек */
+
+/* Контейнер для всех карточек */
 .recipes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -229,6 +277,11 @@ body {
     margin: 0 auto;
     position: relative;
     overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
 }
 
 .decorative-circles {
@@ -272,6 +325,7 @@ body {
     justify-content: center;
     cursor: pointer;
     border: 1px solid #F0E2D2;
+    transition: transform 0.2s;
 }
 
 .favorite-btn:hover {
@@ -306,12 +360,10 @@ body {
     object-fit: cover;
 }
 
-/* Контент карточки */
 .recipe-content {
     padding: 16px 18px 20px 18px;
 }
 
-/* Название рецепта */
 .recipe-name {
     font-size: 20px;
     color: #9B5E2E;
@@ -338,7 +390,6 @@ body {
     border: 1px solid #EADABC;
 }
 
-/* Информационные строки */
 .recipe-info-row {
     display: flex;
     justify-content: space-between;
@@ -380,49 +431,43 @@ body {
     margin-left: -40px;
 }
 
-/* Для адаптивной замены кнопок */
-
-/* Иконка профиля */
-.profile-icon {
-    margin-left: auto;
-    cursor: pointer;
-    width: 60px;
-    height: 60px;
-    position: relative;
-}
-
-
-.dropdown-menu {
-    position: absolute;
-    top: 70px;
-    right: 0;
-    background: white;
-    border: 2px solid #9B5E2E;
-    border-radius: 15px;
-    min-width: 150px;
-    display: none;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.dropdown-menu.show {
-    display: block;
-}
-
-.dropdown-item {
-    display: block;
-    padding: 10px 20px;
-    text-decoration: none;
-    color: #9B5E2E;
-    font-size: 14px;
-    background: white;
-    border: none;
+/* Стили для модального окна */
+.profile-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-family: inherit;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
 }
 
-.dropdown-item:hover {
-    background-color: #F7EDE1;
+.profile-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.profile-modal-container {
+    background-color: #FFF8EE;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 3px solid #9B5E2E;
+}
+
+.profile-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid
 }

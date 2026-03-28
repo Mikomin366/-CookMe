@@ -1,3 +1,5 @@
+/* edit-recipe.css */
+
 header {
     display: flex;
     align-items: center;
@@ -51,7 +53,13 @@ body {
     position: relative;
 }
 
-
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #9B5E2E;
+}
 
 .dropdown-menu {
     position: absolute;
@@ -326,7 +334,6 @@ body {
     border: 3px solid #9B5E2E;
     border-radius: 20px;
     padding: 20px;
-
     box-sizing: border-box;
     margin-left: -150px;
 }
@@ -371,7 +378,7 @@ body {
     border: 3px solid #9B5E2E;
     border-radius: 20px;
     padding: 20px;
-  padding-top: 10px;
+    padding-top: 10px;
     position: relative;
 }
 
@@ -500,7 +507,7 @@ body {
     color: #9B5E2E;
 }
 
-/*Модальное окно */
+/* Стили для модального окна */
 .profile-modal-overlay {
     position: fixed;
     top: 0;
@@ -516,10 +523,12 @@ body {
     visibility: hidden;
     transition: all 0.3s ease;
 }
+
 .profile-modal-overlay.active {
     opacity: 1;
     visibility: visible;
 }
+
 .profile-modal-container {
     background-color: #FFF8EE;
     border-radius: 20px;
@@ -530,6 +539,7 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border: 3px solid #9B5E2E;
 }
+
 .profile-modal-header {
     display: flex;
     justify-content: space-between;
@@ -538,11 +548,13 @@ body {
     border-bottom: 2px solid #9B5E2E;
     background-color: #FFEDD2;
 }
+
 .profile-modal-header h2 {
     margin: 0;
     font-size: 28px;
     color: #9B5E2E;
 }
+
 .profile-modal-close {
     background: none;
     border: none;
@@ -559,13 +571,16 @@ body {
     justify-content: center;
     border-radius: 50%;
 }
+
 .profile-modal-close:hover {
     color: #D46B3A;
     background-color: #FFF3E0;
 }
+
 .profile-modal-body {
     padding: 24px;
 }
+
 .avatar-section {
     display: flex;
     flex-direction: column;
@@ -574,6 +589,7 @@ body {
     padding-bottom: 20px;
     border-bottom: 2px dashed #EADABC;
 }
+
 .current-avatar-large {
     width: 120px;
     height: 120px;
@@ -583,6 +599,7 @@ body {
     margin-bottom: 15px;
     background-color: #FFEDD2;
 }
+
 .avatar-upload-btn {
     background-color: #C5E0B4;
     border: 2px solid #9B5E2E;
@@ -594,12 +611,15 @@ body {
     font-family: inherit;
     transition: all 0.2s;
 }
+
 .avatar-upload-btn:hover {
     background-color: #b1d29b;
 }
+
 .profile-form-field {
     margin-bottom: 20px;
 }
+
 .profile-form-field label {
     display: block;
     margin-bottom: 8px;
@@ -607,6 +627,7 @@ body {
     color: #9B5E2E;
     font-size: 16px;
 }
+
 .profile-form-field input {
     width: 100%;
     padding: 12px 16px;
@@ -618,10 +639,12 @@ body {
     font-family: inherit;
     box-sizing: border-box;
 }
+
 .profile-form-field input:focus {
     outline: none;
     border-color: #D46B3A;
 }
+
 .profile-modal-footer {
     padding: 16px 24px;
     border-top: 2px solid #9B5E2E;
@@ -630,6 +653,7 @@ body {
     gap: 15px;
     background-color: #FFEDD2;
 }
+
 .profile-modal-btn {
     padding: 10px 24px;
     border-radius: 20px;
@@ -640,22 +664,26 @@ body {
     border: 2px solid #9B5E2E;
     font-family: inherit;
 }
+
 .profile-modal-btn-cancel {
     background-color: #FFF3E0;
     color: #9B5E2E;
 }
+
 .profile-modal-btn-cancel:hover {
     background-color: #F7EDE1;
 }
+
 .profile-modal-btn-save {
     background-color: #C5E0B4;
     color: #9B5E2E;
 }
+
 .profile-modal-btn-save:hover {
-     background-color: #b1d29b;
+    background-color: #b1d29b;
 }
-        
- /* Кнопка внизу */
+
+/* Кнопка внизу */
 .button-container {
     display: flex;
     flex-direction: row;
@@ -664,7 +692,7 @@ body {
     margin-top: 30px;
     width: 100%;
 }
-        
+
 .action-button {
     width: 320px;
     height: 100px;
@@ -678,7 +706,87 @@ body {
     text-align: center;
     font-family: inherit;
 }
-        
+
 .action-button:hover {
     background-color: #b1d29b;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 768px) {
+    header {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    
+    .logo img {
+        max-width: 70px;
+        height: auto;
+    }
+    
+    .information-container {
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        flex-direction: column;
+    }
+    
+    .recipe-image-box {
+        width: 100%;
+        height: auto;
+        min-height: 300px;
+    }
+    
+    .recipe-form-fields {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 30px;
+    }
+    
+    .ingredients-wrapper,
+    .steps-section,
+    .ingredients-field {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .steps-section {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .description-container {
+        width: 100%;
+        margin-left: 0;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .ingredient-add-button {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .ingredient-item {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 12px;
+    }
+    
+    .ingredient-name {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .ingredient-quantity,
+    .ingredient-unit {
+        width: 70px;
+    }
+    
+    .description-button {
+        width: 100%;
+        max-width: 280px;
+    }
 }

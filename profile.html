@@ -6,161 +6,7 @@
     <title>Профиль</title>
     <link rel="stylesheet" href="css/profile.css">
     <style>
-        /*Модальное окно */
-        .profile-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        .profile-modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .profile-modal-container {
-            background-color: #FFF8EE;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            border: 3px solid #9B5E2E;
-        }
-        .profile-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 2px solid #9B5E2E;
-            background-color: #FFEDD2;
-        }
-        .profile-modal-header h2 {
-            margin: 0;
-            font-size: 28px;
-            color: #9B5E2E;
-        }
-        .profile-modal-close {
-            background: none;
-            border: none;
-            font-size: 32px;
-            cursor: pointer;
-            color: #9B5E2E;
-            transition: color 0.2s;
-            line-height: 1;
-            padding: 0;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        .profile-modal-close:hover {
-            color: #D46B3A;
-            background-color: #FFF3E0;
-        }
-        .profile-modal-body {
-            padding: 24px;
-        }
-        .avatar-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 2px dashed #EADABC;
-        }
-        .current-avatar-large {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #9B5E2E;
-            margin-bottom: 15px;
-            background-color: #FFEDD2;
-        }
-        .avatar-upload-btn {
-            background-color: #C5E0B4;
-            border: 2px solid #9B5E2E;
-            border-radius: 30px;
-            padding: 8px 20px;
-            font-size: 14px;
-            color: #9B5E2E;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-        .avatar-upload-btn:hover {
-            background-color: #b1d29b;
-        }
-        .profile-form-field {
-            margin-bottom: 20px;
-        }
-        .profile-form-field label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #9B5E2E;
-            font-size: 16px;
-        }
-        .profile-form-field input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #9B5E2E;
-            border-radius: 15px;
-            font-size: 16px;
-            background: white;
-            color: #9B5E2E;
-            font-family: inherit;
-            box-sizing: border-box;
-        }
-        .profile-form-field input:focus {
-            outline: none;
-            border-color: #D46B3A;
-        }
-        .profile-modal-footer {
-            padding: 16px 24px;
-            border-top: 2px solid #9B5E2E;
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            background-color: #FFEDD2;
-        }
-        .profile-modal-btn {
-            padding: 10px 24px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid #9B5E2E;
-            font-family: inherit;
-        }
-        .profile-modal-btn-cancel {
-            background-color: #FFF3E0;
-            color: #9B5E2E;
-        }
-        .profile-modal-btn-cancel:hover {
-            background-color: #F7EDE1;
-        }
-        .profile-modal-btn-save {
-            background-color: #C5E0B4;
-            color: #9B5E2E;
-        }
-        .profile-modal-btn-save:hover {
-            background-color: #b1d29b;
-        }
-        
+        /* Уникальные стили для уведомлений и анимаций */
         .notification {
             position: fixed;
             bottom: 20px;
@@ -192,176 +38,6 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        /* Стили для карточек рецептов */
-        .recipes-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .recipe-card {
-            background: #FFFFFF;
-            border-radius: 20px;
-            cursor: pointer;
-            border: 1px solid #F0E2D2;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
-        
-        .recipe-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .decorative-circles {
-            position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-        
-        .outer-circle {
-            width: 42px;
-            height: 42px;
-            background-color: #9B5E2E;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .inner-circle {
-            width: 20px;
-            height: 20px;
-            background-color: #FFFFFF;
-            border-radius: 50%;
-        }
-        
-        .recipe-photo {
-            width: 100%;
-            height: 200px;
-            background: #FFEDD2;
-            border-bottom: 1px solid #F0E2CE;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9B5E2E;
-            font-size: 14px;
-        }
-        
-        .recipe-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .recipe-content {
-            padding: 16px 18px 20px 18px;
-        }
-        
-        .recipe-name {
-            font-size: 20px;
-            color: #9B5E2E;
-            margin-bottom: 12px;
-            line-height: 1.3;
-            text-align: center;
-            font-weight: 600;
-        }
-        
-        .recipe-categories {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-            justify-content: center;
-        }
-        
-        .category-tag {
-            font-size: 12px;
-            color: #9B5E2E;
-            background: #F7EDE1;
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid #EADABC;
-        }
-        
-        .recipe-info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #F5E8DA;
-        }
-        
-        .info-label {
-            font-size: 13px;
-            color: #9B5E2E;
-        }
-        
-        .info-value {
-            font-size: 15px;
-            color: #9B5E2E;
-        }
-        
-        .author-row {
-            border-bottom: none;
-            padding-top: 10px;
-            margin-top: 4px;
-        }
-        
-        .recipe-actions {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #F5E8DA;
-        }
-        
-        .recipe-actions button {
-            padding: 8px 16px;
-            font-size: 14px;
-            border-radius: 20px;
-            border: 2px solid #9B5E2E;
-            background-color: #C5E0B4;
-            color: #9B5E2E;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-        
-        .recipe-actions button:hover {
-            background-color: #b1d29b;
-        }
-        
-        .empty-message {
-            text-align: center;
-            padding: 80px 20px;
-            color: #9B5E2E;
-            font-size: 18px;
-            background: #FFFBF5;
-            border-radius: 20px;
-            margin-top: 40px;
-        }
-        
-        .recipes-list {
-            min-height: auto;
-            overflow: visible;
-            padding-right: 10px;
-        }
-        
-        .favorite-button.active {
-            background-color: #9B5E2E;
-            color: #FFF8EE;
-        }
     </style>
 </head>
 <body>
@@ -384,7 +60,6 @@
     <main class="profile-container">
         <div class="profile-buttons">
             <button class="add-recipe-button" id="addRecipeButton">Добавить новый рецепт</button>
-            <button class="export-button" id="exportButton">Выгрузить</button>
         </div>
         <div class="recipes-header">
             <h1 class="recipes-c">Ваши рецепты</h1>
@@ -547,7 +222,57 @@
             }
         }
         
-        // ========== ОТОБРАЖЕНИЕ КАРТОЧЕК ==========
+        // ========== ДОБАВЛЕНИЕ/УДАЛЕНИЕ ИЗ ИЗБРАННОГО ==========
+        async function toggleFavorite(recipeId, event) {
+            event.stopPropagation();
+            
+            const recipe = allUserRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            const newFavoriteStatus = !recipe.isFavorite;
+            const btn = event.currentTarget;
+            
+            recipe.isFavorite = newFavoriteStatus;
+            updateFavoriteButton(btn, newFavoriteStatus);
+            
+            try {
+                if (newFavoriteStatus) {
+                    await apiCall('/favorites/', {
+                        method: 'POST',
+                        body: JSON.stringify({ recipe_id: recipeId })
+                    });
+                    showNotification('Рецепт добавлен в избранное');
+                } else {
+                    await apiCall(`/favorites/${recipeId}/`, {
+                        method: 'DELETE'
+                    });
+                    showNotification('Рецепт удален из избранного');
+                }
+                
+                if (showOnlyFavorites) {
+                    filterAndDisplayRecipes();
+                }
+                
+            } catch (error) {
+                recipe.isFavorite = !newFavoriteStatus;
+                updateFavoriteButton(btn, !newFavoriteStatus);
+                showNotification(error.message, true);
+            }
+        }
+        
+        function updateFavoriteButton(btn, isFavorite) {
+            const iconSpan = btn.querySelector('.favorite-icon');
+            if (iconSpan) {
+                iconSpan.textContent = isFavorite ? '💖' : '♡';
+            }
+            if (isFavorite) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+        
+        // ========== ОТОБРАЖЕНИЕ КАРТОЧЕК (как в main) ==========
         function displayRecipes(recipes) {
             const container = document.getElementById('recipesList');
             
@@ -569,6 +294,10 @@
                                 <div class="outer-circle">
                                     <div class="inner-circle"></div>
                                 </div>
+                            </div>
+                            
+                            <div class="favorite-btn ${recipe.isFavorite ? 'active' : ''}" onclick="toggleFavorite(${recipe.id}, event)">
+                                <span class="favorite-icon">${recipe.isFavorite ? '💖' : '♡'}</span>
                             </div>
                             
                             <div class="recipe-photo">
@@ -597,12 +326,6 @@
                                     <span class="info-label">Автор</span>
                                     <span class="info-value">${escapeHtml(recipe.author_name || recipe.author || 'Вы')}</span>
                                 </div>
-                                
-                                <div class="recipe-actions">
-                                    <button class="view-recipe" onclick="event.stopPropagation(); goToRecipe(${recipe.id})">Просмотр</button>
-                                    <button class="edit-recipe" onclick="event.stopPropagation(); editRecipe(${recipe.id})">Редактировать</button>
-                                    <button class="delete-recipe" onclick="event.stopPropagation(); deleteRecipe(${recipe.id})">Удалить</button>
-                                </div>
                             </div>
                         </div>
                     `).join('')}
@@ -623,22 +346,6 @@
         // ========== ДЕЙСТВИЯ С РЕЦЕПТАМИ ==========
         function goToRecipe(recipeId) {
             window.location.href = `information.html?id=${recipeId}`;
-        }
-        
-        function editRecipe(recipeId) {
-            window.location.href = `edit-recipe.html?id=${recipeId}`;
-        }
-        
-        async function deleteRecipe(recipeId) {
-            if (!confirm('Вы уверены, что хотите удалить этот рецепт?')) return;
-            
-            try {
-                await apiCall(`/recipes/${recipeId}/`, { method: 'DELETE' });
-                showNotification('Рецепт удален');
-                await loadUserRecipes();
-            } catch (error) {
-                showNotification(error.message, true);
-            }
         }
         
         // ========== МОДАЛЬНОЕ ОКНО (независимые операции) ==========
@@ -668,13 +375,11 @@
             const hasPasswordChange = !!newPassword;
             const hasAvatarChange = !!tempAvatarFile;
             
-            // Если ничего не меняем
             if (!hasPasswordChange && !hasAvatarChange) {
                 closeModal();
                 return;
             }
             
-            // Проверка пароля только если есть смена пароля
             if (hasPasswordChange) {
                 if (!currentPassword) {
                     showNotification('Введите текущий пароль', true);
@@ -695,7 +400,6 @@
             saveBtn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
             
             try {
-                // Смена пароля (только если введен новый)
                 if (hasPasswordChange) {
                     await apiCall(`/users/${getUserId()}/change-password/`, {
                         method: 'POST',
@@ -707,7 +411,6 @@
                     showNotification('Пароль изменен');
                 }
                 
-                // Загрузка аватара (только если выбран файл)
                 if (hasAvatarChange) {
                     const formData = new FormData();
                     formData.append('avatar', tempAvatarFile);
@@ -781,11 +484,6 @@
             window.location.href = 'add-recipe.html';
         };
         
-        // Кнопка выгрузки (функция будет доступна позже)
-        document.getElementById('exportButton').onclick = () => {
-            // Функция будет добавлена позже
-        };
-        
         document.getElementById('favoriteButton').onclick = () => {
             const btn = document.getElementById('favoriteButton');
             showOnlyFavorites = !showOnlyFavorites;
@@ -827,8 +525,7 @@
         
         // Делаем функции глобальными для onclick
         window.goToRecipe = goToRecipe;
-        window.editRecipe = editRecipe;
-        window.deleteRecipe = deleteRecipe;
+        window.toggleFavorite = toggleFavorite;
     </script>
 </body>
 </html>
