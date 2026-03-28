@@ -228,7 +228,7 @@
             sanitizeValue();
         };
         
-        // ========== МОДАЛЬНОЕ ОКНО ==========
+        // Модальное окно
         const modal = document.getElementById('editProfileModal');
         
         const openModal = () => {
@@ -346,7 +346,7 @@
         document.getElementById('saveProfileBtn').onclick = saveProfile;
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
         
-        // ========== РАБОТА С РЕЦЕПТАМИ ==========
+        // Работа с рецептами
         let currentRecipeId = null;
         let imageFile = null;
         
@@ -505,7 +505,7 @@
                 }
                 
                 showMessage('Рецепт сохранен');
-                setTimeout(() => location.href = `information.html?id=${currentRecipeId}`, 1500);
+                setTimeout(() => location.href = `profile.html`, 1500);
             } catch (err) {
                 showMessage(err.message, true);
                 btn.disabled = false;
@@ -640,7 +640,7 @@
             location.href = 'enter.html';
         };
         
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // Инициализация
         const init = async () => {
             await loadUserAvatar();
             await loadRecipe();
