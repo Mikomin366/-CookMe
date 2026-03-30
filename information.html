@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Просмотр рецепта</title>
-    <link rel="stylesheet" href="css/information.css">
+    <link rel="stylesheet" href="/static/css/information.css">
     <style>
         /* Уникальные стили для уведомлений и анимаций */
         .notification {
@@ -89,7 +89,7 @@
 <body>
     <header>
        <div class="logo">
-            <a href="main.html" class="logo"><img src="/images/Logo.png"></a>
+            <a href="main.html" class="logo"><img src="/static/images/Logo.png"></a>
         </div>
         
         <!-- Кнопки авторизации (показываются для гостей) -->
@@ -100,7 +100,7 @@
         
         <!-- Иконка профиля (показывается для авторизованных) -->
         <div class="profile-icon" id="profileIcon" style="display: none;">
-            <img src="images/Ellipse 21.png" class="profile-img" id="profileAvatar">
+            <img src="/static/images/Ellipse 21.png" class="profile-img" id="profileAvatar">
             <div class="dropdown-menu" id="dropdownMenu">
                 <a href="profile.html" class="dropdown-item">Профиль</a>
                 <button class="dropdown-item" id="editProfileBtn">Редактировать</button>
@@ -232,7 +232,7 @@
             }, 3000);
         }
         
-        // Управление иконкой профиля
+        // ========== УПРАВЛЕНИЕ ИКОНКОЙ ПРОФИЛЯ И КНОПКОЙ РЕДАКТИРОВАНИЯ ==========
         function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
             const profileIcon = document.getElementById('profileIcon');
@@ -244,11 +244,22 @@
                 profileIcon.style.display = 'block';
                 loadProfileAvatar();
                 
-                if (editButton) editButton.style.display = 'block';
+                // ========== ИСПРАВЛЕНИЕ: Показываем кнопку "Редактировать" только если пользователь - автор ==========
+                if (editButton && currentRecipe) {
+                    const userId = getUserId();
+                    // Проверяем, является ли текущий пользователь автором рецепта
+                    // author_id может быть в виде числа или строки, поэтому сравниваем с parseInt
+                    if (currentRecipe.author_id && parseInt(currentRecipe.author_id) === parseInt(userId)) {
+                        editButton.style.display = 'block';
+                    } else {
+                        editButton.style.display = 'none';
+                    }
+                }
             } else {
                 authButtons.style.display = 'flex';
                 profileIcon.style.display = 'none';
                 
+                // Гость не видит кнопку редактирования
                 if (editButton) editButton.style.display = 'none';
             }
         }
@@ -545,6 +556,9 @@
                 currentRecipe = recipe;
                 displayRecipe(recipe);
                 
+                // ========== ВАЖНО: Обновляем UI после загрузки рецепта ==========
+                updateAuthUI();
+                
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
                 showNotification(error.message);
@@ -574,27 +588,6 @@
             exportBtn.innerHTML = '<span class="loading-spinner"></span> Подготовка...';
             
             try {
-                // Здесь будет запрос к бэкенду для генерации PDF
-                // const response = await fetch(`${API_BASE_URL}/recipes/${currentRecipe.id}/export-pdf/`, {
-                //     method: 'GET',
-                //     headers: { 'Authorization': `Bearer ${getToken()}` }
-                // });
-                // 
-                // if (response.ok) {
-                //     const blob = await response.blob();
-                //     const url = window.URL.createObjectURL(blob);
-                //     const a = document.createElement('a');
-                //     a.href = url;
-                //     a.download = `${currentRecipe.name}.pdf`;
-                //     document.body.appendChild(a);
-                //     a.click();
-                //     document.body.removeChild(a);
-                //     window.URL.revokeObjectURL(url);
-                //     showNotification('PDF успешно выгружен');
-                // } else {
-                //     throw new Error('Ошибка выгрузки');
-                // }
-                
                 // Временное уведомление о том, что функция будет доступна позже
                 showNotification('Функция выгрузки PDF будет доступна в следующей версии');
                 
