@@ -1,15 +1,11 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.conf import settings
 
 class UserRegistrationForm(forms.Form):
-    username = forms.CharField(label='Логин', max_length=150)
-    password1 = forms.CharField(label='Пароль', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
-    avatar = forms.ChoiceField(
-        label='Аватарка',
-        choices=[(p, p) for p in settings.AVATAR_PRESETS],
-        required=False
-    )
+    username = forms.CharField(label='Логин', max_length=150, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label='Пароль', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
@@ -20,42 +16,48 @@ class UserRegistrationForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(label='Логин')
-    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)
+    username = forms.CharField(label='Логин', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
 
 class RecipeForm(forms.Form):
-    name = forms.CharField(label='Название', max_length=200)
-    time = forms.IntegerField(label='Время приготовления (мин)', required=False)
-    calories = forms.IntegerField(label='Калории', required=False)
-    description = forms.CharField(label='Описание', widget=forms.Textarea, required=False)
-    photo = forms.CharField(label='Путь к фото', max_length=200, required=False)
-    categories = forms.CharField(label='Категории (ID через запятую)', required=False)
+    name = forms.CharField(label='Название', max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    time = forms.IntegerField(label='Время приготовления (мин)', required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    calories = forms.IntegerField(label='Калории', required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    description = forms.CharField(label='Описание', widget=forms.Textarea(attrs={'class': 'form-control'}), required=False)
+    photo_upload = forms.ImageField(label='Фото рецепта', required=False, widget=forms.FileInput(attrs={'class': 'form-control-file'}))
+    categories_text = forms.CharField(
+        label='Категории',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        help_text='Введите названия категорий через запятую.'
+    )
 
+    def clean_time(self):
+        time = self.cleaned_data.get('time')
+        if time is not None and time < 0:
+            raise ValidationError('Время не может быть отрицательным')
+        return time
 
-class RecipeIngredientForm(forms.Form):
-    ingredient_id = forms.IntegerField(label='ID ингредиента')
-    quantity = forms.DecimalField(label='Количество', max_digits=10, decimal_places=2, required=False)
-    unit = forms.IntegerField(label='Единица измерения (код)', required=False)
-
-
-class StepReceptForm(forms.Form):
-    step_number = forms.IntegerField(label='Номер шага')
-    description = forms.CharField(label='Описание', widget=forms.Textarea)
-    timer = forms.IntegerField(label='Таймер (сек)', required=False)
+    def clean_calories(self):
+        calories = self.cleaned_data.get('calories')
+        if calories is not None and calories < 0:
+            raise ValidationError('Калории не могут быть отрицательными')
+        return calories
 
 
 class AvatarChangeForm(forms.Form):
-    avatar = forms.ChoiceField(
-        label='Аватарка',
-        choices=[(p, p) for p in settings.AVATAR_PRESETS]
+    avatar_upload = forms.ImageField(
+        label='Загрузить аватарку',
+        required=True,
+        widget=forms.FileInput(attrs={'class': 'form-control-file'})
     )
 
 
 class ChangePasswordForm(forms.Form):
-    old_password = forms.CharField(label='Старый пароль', widget=forms.PasswordInput)
-    new_password1 = forms.CharField(label='Новый пароль', widget=forms.PasswordInput)
-    new_password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
+    old_password = forms.CharField(label='Старый пароль', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password1 = forms.CharField(label='Новый пароль', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     def clean_new_password2(self):
         new1 = self.cleaned_data.get('new_password1')

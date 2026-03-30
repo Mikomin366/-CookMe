@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, DateTime, ForeignKey, DECIMAL, MetaData
+    Column, Integer, String, DateTime, ForeignKey, DECIMAL, LargeBinary
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -13,10 +13,12 @@ class User(Base):
     ID = Column(Integer, primary_key=True, autoincrement=True)
     Login = Column(String, nullable=False, unique=True)
     Password = Column(String, nullable=False)
-    Image = Column(String)
     is_staff = Column(String, nullable=False)
     is_superuser = Column(String, nullable=False)
     date_joining = Column(String, nullable=False)
+
+    avatar_blob = Column(LargeBinary)          # бинарные данные аватарки
+    avatar_mime_type = Column(String(100))     # MIME-тип аватарки
 
     receipts = relationship('Receipt', back_populates='user')
     favorites = relationship('Favorite', back_populates='user')
@@ -40,7 +42,10 @@ class Receipt(Base):
     Calories = Column(Integer)
     description = Column(String)
     ID_user = Column(Integer, ForeignKey('user.ID'), nullable=False)
-    photo = Column(String)
+
+    # Хранение фото в БД
+    photo_blob = Column(LargeBinary)
+    photo_mime_type = Column(String(100))
 
     user = relationship('User', back_populates='receipts')
     categories = relationship('ReceiptCategory', back_populates='receipt')
@@ -101,5 +106,3 @@ class Steprecept(Base):
     step_number = Column(Integer, nullable=False)
     description = Column(String, nullable=False)
     timer = Column(Integer)
-
-    # relationship не обязателен, но можно добавить

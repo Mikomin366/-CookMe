@@ -1,19 +1,234 @@
-{% extends 'recipes/base.html' %}
-{% block title %}Регистрация{% endblock %}
-
-{% block content %}
-<h2>Регистрация</h2>
-<form method="post">
-    {% csrf_token %}
-    {% for field in form %}
-        <div class="mb-3">
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.errors %}
-                <div class="text-danger">{{ field.errors }}</div>
-            {% endif %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/static/css/register.css">
+    <style>
+        /* Дополнительные стили для уведомлений */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5A8F4C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification-error {
+            background-color: #D46B3A;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(155, 94, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: #9B5E2E;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="main.html" class="logo"><img src="/static/images/Logo.png" alt="Логотип"></a>
         </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-</form>
-{% endblock %}
+        <div class="auth-buttons">
+            <a href="enter.html" class="enter-button">Войти</a>
+            <a href="#" class="register-button">Зарегистрироваться</a>
+        </div>   
+    </header>
+    <main class="registration-container">
+        <h1>Зарегистрируйся здесь</h1>
+        <form class="registration-form" id="registerForm">
+            <div class="input-container">
+                <input type="text" id="login" name="login" placeholder="Логин" 
+                autocomplete="username" required>
+            </div>
+
+            <div class="input-container">
+                <input type="password" id="password" name="password" placeholder="Пароль" 
+                autocomplete="new-password" required>
+            </div>
+            
+            <button type="submit" class="registration-button" id="registerButton">Зарегистрироваться</button>
+        </form>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+    </main>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        // Получаем элементы формы
+        const registerForm = document.getElementById('registerForm');
+        const loginInput = document.getElementById('login');
+        const passwordInput = document.getElementById('password');
+        const registerButton = document.getElementById('registerButton');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const successMessageDiv = document.getElementById('successMessage');
+        
+        // Скрыть все сообщения
+        function hideMessages() {
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+            errorMessageDiv.textContent = '';
+            successMessageDiv.textContent = '';
+        }
+        
+        // Показать ошибку
+        function showError(message) {
+            hideMessages();
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+        }
+        
+        // Показать успех
+        function showSuccess(message) {
+            hideMessages();
+            successMessageDiv.textContent = message;
+            successMessageDiv.style.display = 'block';
+        }
+        
+        // Проверка валидности данных
+        function validateForm() {
+            const login = loginInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!login) {
+                showError('Введите логин');
+                loginInput.focus();
+                return false;
+            }
+            
+            if (login.length < 3) {
+                showError('Логин должен содержать не менее 3 символов');
+                loginInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showError('Введите пароль');
+                passwordInput.focus();
+                return false;
+            }
+            
+            if (password.length < 4) {
+                showError('Пароль должен содержать не менее 4 символов');
+                passwordInput.focus();
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Установка состояния загрузки
+        function setLoading(isLoading) {
+            if (isLoading) {
+                registerButton.disabled = true;
+                registerButton.textContent = 'Регистрация...';
+            } else {
+                registerButton.disabled = false;
+                registerButton.textContent = 'Зарегистрироваться';
+            }
+        }
+        
+        // Сохранение сессии после регистрации (с authToken и userId)
+        function saveSession(userData) {
+            localStorage.setItem('authToken', userData.token);
+            localStorage.setItem('userId', userData.id);
+        }
+        
+        // Отправка данных на бэкенд
+        async function registerUser(login, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/register/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: login,
+                        password: password
+                    })
+                });
+                
+                if (!response.ok) {
+                    let errorMessage = 'Ошибка регистрации';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || `Ошибка ${response.status}`;
+                    } catch (e) {
+                        errorMessage = `Ошибка сервера: ${response.status}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                const data = await response.json();
+                return { success: true, data: data };
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Обработка отправки формы
+        async function handleRegisterSubmit(event) {
+            event.preventDefault();
+            hideMessages();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            const login = loginInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            setLoading(true);
+            const result = await registerUser(login, password);
+            
+            if (result.success) {
+                showSuccess('Регистрация прошла успешно! Перенаправление...');
+                saveSession(result.data);
+                
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 1500);
+            } else {
+                showError(result.error || 'Ошибка при регистрации. Возможно, такой логин уже существует.');
+                setLoading(false);
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            registerForm.addEventListener('submit', handleRegisterSubmit);
+            
+            // Обработка Enter
+            [loginInput, passwordInput].forEach(input => {
+                input.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleRegisterSubmit(event);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

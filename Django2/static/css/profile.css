@@ -1,0 +1,554 @@
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 110px;
+    padding-right: 110px;
+    padding-top: 54px;
+    padding-bottom: 61px;
+    box-sizing: border-box;
+}
+
+.logo {
+    margin-left: -20px;
+}
+
+/* Иконка профиля */
+.profile-icon {
+    margin-left: auto;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    margin-right: 10px;
+    position: relative;
+}
+
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #9B5E2E;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 75px;
+    right: 0;
+    background: white;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    min-width: 180px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #9B5E2E;
+    font-size: 16px;
+    background: white;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.dropdown-item:first-child {
+    border-radius: 13px 13px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 13px 13px;
+}
+
+.dropdown-item:hover {
+    background-color: #F7EDE1;
+}
+
+body {
+    background-color: #FFF3E0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-container {
+    width: 1600px;
+    min-height: 800px;
+    background: #FFF8EE;
+    border: 3px solid #9B5E2E;
+    border-radius: 20px;
+    margin-left: 110px;
+    margin-right: 110px;
+    margin-bottom: 105px;
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-bottom: 81px;
+}
+
+.username {
+    font-size: 40px;
+    font-weight: 600;
+    color: #9B5E2E;
+    margin-bottom: 56px;
+    margin-top: 59px;
+    margin-left: -1400px;
+}
+
+.recipes-c {
+    font-size: 40px;
+    color: #9B5E2E;
+}
+
+.profile-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    position: relative;
+}
+
+.add-recipe-button {
+    width: 450px;
+    height: 88px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 12px 28px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.export-button {
+    width: 175px;
+    height: 88px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 12px 28px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.add-recipe-button:hover,
+.export-button:hover {
+    background-color: #b1d29b;
+}
+
+.recipes-header {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    margin-left: 40px;
+}
+
+.recipes-c {
+    font-size: 40px;
+    color: #9B5E2E;
+    margin: 0;
+}
+
+.favorite-button {
+    width: 165px;
+    height: 45px;
+    font-size: 24px;
+    color: #9B5E2E;
+    background-color: #C5E0B4;
+    text-decoration: none;
+    padding: 8px 4px;
+    border: 2px solid #9B5E2E;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-left: 20px;
+}
+
+.favorite-button.active {
+    background-color: #9B5E2E;
+    color: #FFF8EE;
+    border-color: #9B5E2E;
+}
+
+.favorite-status {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    color: #9B5E2E;
+    background: #FFF8EE;
+    border: 1px solid #9B5E2E;
+    border-radius: 10px;
+}
+
+/* Стили для карточек рецептов (как в main) */
+/* Контейнер для всех карточек */
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+/* Карточка рецепта */
+.recipe-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid #F0E2D2;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+}
+
+.decorative-circles {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.outer-circle {
+    width: 42px;
+    height: 42px;
+    background-color: #9B5E2E;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inner-circle {
+    width: 20px;
+    height: 20px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+}
+
+.favorite-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid #F0E2D2;
+    z-index: 10;
+    transition: transform 0.2s;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.05);
+    background: white;
+}
+
+.favorite-btn.active {
+    background: #FFFFFF;
+}
+
+.favorite-icon {
+    font-size: 20px;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.favorite-btn:not(.active) .favorite-icon {
+    color: #9B5E2E;
+}
+
+.recipe-photo {
+    width: 100%;
+    height: 200px;
+    background: #FFEDD2;
+    border-bottom: 1px solid #F0E2CE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9B5E2E;
+    font-size: 14px;
+}
+
+.recipe-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe-content {
+    padding: 16px 18px 20px 18px;
+}
+
+.recipe-name {
+    font-size: 20px;
+    color: #9B5E2E;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    text-align: center;
+    font-weight: 600;
+}
+
+.recipe-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+
+.category-tag {
+    font-size: 12px;
+    color: #9B5E2E;
+    background: #F7EDE1;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #EADABC;
+}
+
+.recipe-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #F5E8DA;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #9B5E2E;
+}
+
+.info-value {
+    font-size: 15px;
+    color: #9B5E2E;
+}
+
+.author-row {
+    border-bottom: none;
+    padding-top: 10px;
+    margin-top: 4px;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 80px 20px;
+    color: #9B5E2E;
+    font-size: 18px;
+    background: #FFFBF5;
+    border-radius: 20px;
+    margin-top: 40px;
+}
+
+.recipes-list {
+    min-height: auto;
+    overflow: visible;
+    padding-right: 10px;
+}
+
+/* Стили для модального окна */
+.profile-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.profile-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.profile-modal-container {
+    background-color: #FFF8EE;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 3px solid #9B5E2E;
+}
+
+.profile-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid #9B5E2E;
+    background-color: #FFEDD2;
+}
+
+.profile-modal-header h2 {
+    margin: 0;
+    font-size: 28px;
+    color: #9B5E2E;
+}
+
+.profile-modal-close {
+    background: none;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    color: #9B5E2E;
+    transition: color 0.2s;
+    line-height: 1;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.profile-modal-close:hover {
+    color: #D46B3A;
+    background-color: #FFF3E0;
+}
+
+.profile-modal-body {
+    padding: 24px;
+}
+
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px dashed #EADABC;
+}
+
+.current-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #9B5E2E;
+    margin-bottom: 15px;
+    background-color: #FFEDD2;
+}
+
+.avatar-upload-btn {
+    background-color: #C5E0B4;
+    border: 2px solid #9B5E2E;
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-size: 14px;
+    color: #9B5E2E;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.avatar-upload-btn:hover {
+    background-color: #b1d29b;
+}
+
+.profile-form-field {
+    margin-bottom: 20px;
+}
+
+.profile-form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #9B5E2E;
+    font-size: 16px;
+}
+
+.profile-form-field input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #9B5E2E;
+    border-radius: 15px;
+    font-size: 16px;
+    background: white;
+    color: #9B5E2E;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.profile-form-field input:focus {
+    outline: none;
+    border-color: #D46B3A;
+}
+
+.profile-modal-footer {
+    padding: 16px 24px;
+    border-top: 2px solid #9B5E2E;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    background-color: #FFEDD2;
+}
+
+.profile-modal-btn {
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid #9B5E2E;
+    font-family: inherit;
+}
+
+.profile-modal-btn-cancel {
+    background-color: #FFF3E0;
+    color: #9B5E2E;
+}
+
+.profile-modal-btn-cancel:hover {
+    background-color: #F7EDE1;
+}
+
+.profile-modal-btn-save {
+    background-color: #C5E0B4;
+    color: #9B5E2E;
+}
+
+.profile-modal-btn-save:hover {
+    background-color: #b1d29b;
+}

@@ -1,467 +1,889 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.hashers import make_password, check_password
-from django.core.paginator import Paginator
-from django.conf import settings
+import io
+import json
 import datetime
+import logging
+import traceback
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.hashers import make_password, check_password
+from PIL import Image
 
-from .forms import (
-    UserRegistrationForm, LoginForm, RecipeForm, AvatarChangeForm, ChangePasswordForm
-)
-from .models_sa import (
+from CookME.db import get_db
+from recipes.models_sa import (
     User, Receipt, Category, Ingredient, RecipeIngredient,
     Favorite, Steprecept, ReceiptCategory
 )
-from CookME.db import get_db
+from recipes.auth import get_user_from_token, create_access_token
 from sqlalchemy.orm import joinedload
 
-# --------------------- Главная страница (список рецептов) ---------------------
-def index(request):
-    """Главная страница со списком рецептов."""
+logger = logging.getLogger(__name__)
+
+
+# --------------------- Вспомогательные функции ---------------------
+def json_response(data, status=200):
+    """Универсальная функция для JSON ответов"""
+    if isinstance(data, dict):
+        return JsonResponse(data, status=status, json_dumps_params={'ensure_ascii': False})
+    else:
+        return JsonResponse(data, safe=False, status=status, json_dumps_params={'ensure_ascii': False})
+
+
+# --------------------- Аутентификация ---------------------
+@csrf_exempt
+def api_login(request):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        body = request.body.decode('utf-8')
+        if not body:
+            return json_response({'error': 'Пустой запрос'}, 400)
+        
+        data = json.loads(body)
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not username or not password:
+            return json_response({'error': 'Введите логин и пароль'}, 400)
+        
+        db = next(get_db())
+        user = db.query(User).filter(User.Login == username).first()
+        db.close()
+        
+        if not user or not check_password(password, user.Password):
+            return json_response({'error': 'Неверный логин или пароль'}, 401)
+        
+        # Сохраняем в сессию
+        request.session['user_id'] = user.ID
+        request.session['username'] = user.Login
+        
+        # Создаём JWT токен
+        token = create_access_token(data={'user_id': user.ID})
+        
+        return json_response({
+            'token': token,
+            'id': user.ID,
+            'login': user.Login,
+            'avatar': f'/api/avatar/{user.ID}/' if user.avatar_blob else None
+        })
+        
+    except json.JSONDecodeError as e:
+        return json_response({'error': f'Ошибка парсинга JSON: {str(e)}'}, 400)
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        traceback.print_exc()
+        return json_response({'error': str(e)}, 500)
+
+
+@csrf_exempt
+def api_register(request):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        body = request.body.decode('utf-8')
+        data = json.loads(body)
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not username or not password:
+            return json_response({'error': 'Введите логин и пароль'}, 400)
+        
+        if len(password) < 4:
+            return json_response({'error': 'Пароль должен содержать не менее 4 символов'}, 400)
+        
+        db = next(get_db())
+        existing = db.query(User).filter(User.Login == username).first()
+        if existing:
+            db.close()
+            return json_response({'error': 'Пользователь с таким логином уже существует'}, 400)
+        
+        hashed_password = make_password(password)
+        new_user = User(
+            Login=username,
+            Password=hashed_password,
+            is_staff='False',
+            is_superuser='False',
+            date_joining=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            avatar_blob=None,
+            avatar_mime_type=None
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        db.close()
+        
+        # Сохраняем в сессию
+        request.session['user_id'] = new_user.ID
+        request.session['username'] = new_user.Login
+        
+        # Создаём JWT токен
+        token = create_access_token(data={'user_id': new_user.ID})
+        
+        return json_response({
+            'token': token,
+            'id': new_user.ID,
+            'login': new_user.Login,
+            'avatar': None
+        })
+        
+    except Exception as e:
+        logger.error(f"Register error: {e}")
+        traceback.print_exc()
+        return json_response({'error': str(e)}, 500)
+
+
+# --------------------- Пользователи ---------------------
+def api_get_user(request, user_id):
+    if request.method != 'GET':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user or user.ID != user_id:
+        return json_response({'error': 'Не авторизован'}, 401)
+    
     db = next(get_db())
-    recipes = db.query(Receipt).order_by(Receipt.ID.desc()).all()
-
-    # Избранное текущего пользователя
-    favorite_ids = []
-    show_favorites = False
-    user_id = request.session.get('user_id')
-    if user_id:
-        favs = db.query(Favorite).filter(Favorite.user_id == user_id).all()
-        favorite_ids = [fav.recipe_id for fav in favs]
-        if request.GET.get('favorites'):
-            show_favorites = True
-            recipes = [r for r in recipes if r.ID in favorite_ids]
-
-    # Пагинация
-    paginator = Paginator(recipes, 9)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
+    db_user = db.query(User).filter(User.ID == user_id).first()
+    if not db_user:
+        db.close()
+        return json_response({'error': 'Пользователь не найден'}, 404)
+    
+    avatar_url = f'/api/avatar/{db_user.ID}/' if db_user.avatar_blob else None
+    
+    result = {
+        'id': db_user.ID,
+        'login': db_user.Login,
+        'username': db_user.Login,
+        'avatar': avatar_url
+    }
     db.close()
-    return render(request, 'recipes/index.html', {
-        'page_obj': page_obj,
-        'show_favorites': show_favorites,
-        'favorite_ids': favorite_ids,
-    })
+    return json_response(result)
 
 
-# --------------------- Регистрация ---------------------
-def register(request):
-    """Регистрация пользователя."""
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            avatar = form.cleaned_data['avatar']
-
-            db = next(get_db())
-            existing = db.query(User).filter(User.Login == username).first()
-            if existing:
-                messages.error(request, 'Пользователь с таким логином уже существует')
-                db.close()
-                return render(request, 'recipes/register.html', {'form': form})
-
-            hashed_password = make_password(password)
-            new_user = User(
-                Login=username,
-                Password=hashed_password,
-                Image=avatar or settings.AVATAR_PRESETS[0],
-                is_staff='False',
-                is_superuser='False',
-                date_joining=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            )
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-
-            request.session['user_id'] = new_user.ID
-            request.session['username'] = new_user.Login
-            messages.success(request, 'Регистрация успешна')
+@csrf_exempt
+def api_change_password(request, user_id):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user or user.ID != user_id:
+        return json_response({'error': 'Не авторизован'}, 401)
+    
+    try:
+        data = json.loads(request.body)
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        
+        if not current_password or not new_password:
+            return json_response({'error': 'Введите текущий и новый пароль'}, 400)
+        
+        db = next(get_db())
+        db_user = db.query(User).filter(User.ID == user_id).first()
+        if not db_user:
             db.close()
-            return redirect('profile')
-    else:
-        form = UserRegistrationForm()
-    return render(request, 'recipes/register.html', {'form': form})
-
-
-# --------------------- Вход ---------------------
-def login_view(request):
-    """Вход пользователя."""
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            db = next(get_db())
-            user = db.query(User).filter(User.Login == username).first()
+            return json_response({'error': 'Пользователь не найден'}, 404)
+        
+        if not check_password(current_password, db_user.Password):
             db.close()
-            if user and check_password(password, user.Password):
-                request.session['user_id'] = user.ID
-                request.session['username'] = user.Login
-                messages.success(request, 'Вы вошли')
-                return redirect('profile')
-            else:
-                messages.error(request, 'Неверный логин или пароль')
-    else:
-        form = LoginForm()
-    return render(request, 'recipes/login.html', {'form': form})
+            return json_response({'error': 'Неверный текущий пароль'}, 400)
+        
+        if len(new_password) < 4:
+            db.close()
+            return json_response({'error': 'Новый пароль должен содержать не менее 4 символов'}, 400)
+        
+        db_user.Password = make_password(new_password)
+        db.commit()
+        db.close()
+        
+        return json_response({'message': 'Пароль изменен'})
+        
+    except Exception as e:
+        return json_response({'error': str(e)}, 500)
 
 
-# --------------------- Выход ---------------------
-def logout_view(request):
-    """Выход."""
-    request.session.flush()
-    messages.success(request, 'Вы вышли')
-    return redirect('index')
+@csrf_exempt
+def api_upload_avatar(request, user_id):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user or user.ID != user_id:
+        return json_response({'error': 'Не авторизован'}, 401)
+    
+    try:
+        avatar_file = request.FILES.get('avatar')
+        if not avatar_file:
+            return json_response({'error': 'Файл не загружен'}, 400)
+        
+        image_data = avatar_file.read()
+        img = Image.open(io.BytesIO(image_data))
+        img_format = img.format.lower()
+        if img_format not in ['jpeg', 'png', 'gif']:
+            return json_response({'error': 'Неподдерживаемый формат изображения (JPEG, PNG, GIF)'}, 400)
+        
+        db = next(get_db())
+        db_user = db.query(User).filter(User.ID == user_id).first()
+        if not db_user:
+            db.close()
+            return json_response({'error': 'Пользователь не найден'}, 404)
+        
+        db_user.avatar_blob = image_data
+        db_user.avatar_mime_type = f'image/{img_format}'
+        db.commit()
+        db.close()
+        
+        return json_response({'avatar': f'/api/avatar/{user_id}/'})
+        
+    except Exception as e:
+        return json_response({'error': str(e)}, 500)
 
 
-# --------------------- Профиль пользователя ---------------------
-def profile(request):
-    """Профиль пользователя: список своих рецептов."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
+def api_avatar(request, user_id):
     db = next(get_db())
     user = db.query(User).filter(User.ID == user_id).first()
-    recipes = db.query(Receipt).filter(Receipt.ID_user == user_id).order_by(Receipt.ID.desc()).all()
-    db.close()
-    return render(request, 'recipes/profile.html', {'user': user, 'recipes': recipes})
-
-
-# --------------------- Детальная страница рецепта ---------------------
-def recipe_detail(request, recipe_id):
-    """Просмотр рецепта со всеми деталями."""
-    db = next(get_db())
-    recipe = db.query(Receipt).filter(Receipt.ID == recipe_id).first()
-    if not recipe:
+    if not user or not user.avatar_blob:
         db.close()
-        messages.error(request, 'Рецепт не найден')
-        return redirect('index')
-
-    # Загружаем ингредиенты вместе с их ингредиентом (Ingredient) через joinedload
-    ingredients = db.query(RecipeIngredient)\
-        .options(joinedload(RecipeIngredient.ingredient))\
-        .filter(RecipeIngredient.recipe_id == recipe.ID)\
-        .all()
-    steps = db.query(Steprecept).filter(Steprecept.recipe_ID == recipe.ID).order_by(Steprecept.step_number).all()
-
-    is_favorite = False
-    user_id = request.session.get('user_id')
-    if user_id:
-        fav = db.query(Favorite).filter(Favorite.user_id == user_id, Favorite.recipe_id == recipe.ID).first()
-        is_favorite = fav is not None
-
+        return HttpResponse(status=404)
+    response = HttpResponse(user.avatar_blob, content_type=user.avatar_mime_type)
     db.close()
-    return render(request, 'recipes/recipe_detail.html', {
-        'recipe': recipe,
-        'ingredients': ingredients,
-        'steps': steps,
-        'is_favorite': is_favorite,
-    })
+    return response
 
 
-# --------------------- Создание рецепта ---------------------
-def recipe_create(request):
-    """Создание нового рецепта."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    if request.method == 'POST':
-        recipe_form = RecipeForm(request.POST)
-        ingredient_count = int(request.POST.get('ingredient-count', 0))
-        step_count = int(request.POST.get('step-count', 0))
-
-        if recipe_form.is_valid():
-            db = next(get_db())
-            new_recipe = Receipt(
-                name=recipe_form.cleaned_data['name'],
-                time=recipe_form.cleaned_data['time'],
-                Calories=recipe_form.cleaned_data['calories'],
-                description=recipe_form.cleaned_data['description'],
-                ID_user=user_id,
-                photo=recipe_form.cleaned_data['photo']
-            )
-            db.add(new_recipe)
-            db.commit()
-            db.refresh(new_recipe)
-
-            # Категории (ID через запятую)
-            cat_str = recipe_form.cleaned_data.get('categories')
-            if cat_str:
-                cat_ids = [int(x.strip()) for x in cat_str.split(',') if x.strip().isdigit()]
-                for cat_id in cat_ids:
-                    rc = ReceiptCategory(Rec_ID=new_recipe.ID, Cat_Id=cat_id)
-                    db.add(rc)
-
-            # Ингредиенты
-            for i in range(ingredient_count):
-                ing_id = request.POST.get(f'ingredient_id_{i}')
-                quantity = request.POST.get(f'quantity_{i}')
-                unit = request.POST.get(f'unit_{i}')
-                if ing_id and ing_id.isdigit():
-                    ri = RecipeIngredient(
-                        recipe_id=new_recipe.ID,
-                        Ingredient_id=int(ing_id),
-                        quantity=quantity,
-                        unit=unit
-                    )
-                    db.add(ri)
-
-            # Шаги
-            for i in range(step_count):
-                step_num = request.POST.get(f'step_number_{i}')
-                description = request.POST.get(f'step_description_{i}')
-                timer = request.POST.get(f'step_timer_{i}')
-                if step_num and step_num.isdigit() and description:
-                    step = Steprecept(
-                        recipe_ID=new_recipe.ID,
-                        step_number=int(step_num),
-                        description=description,
-                        timer=timer
-                    )
-                    db.add(step)
-
-            db.commit()
-            db.close()
-            messages.success(request, 'Рецепт создан')
-            return redirect('profile')
-    else:
-        recipe_form = RecipeForm()
-
-    return render(request, 'recipes/recipe_form.html', {
-        'form': recipe_form,
-        'title': 'Создание рецепта',
-        'ingredients': [],
-        'steps': [],
-    })
-
-
-# --------------------- Редактирование рецепта ---------------------
-def recipe_edit(request, recipe_id):
-    """Редактирование рецепта."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
+# --------------------- Рецепты ---------------------
+def api_recipes(request):
+    if request.method != 'GET':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
     db = next(get_db())
-    recipe = db.query(Receipt).filter(Receipt.ID == recipe_id, Receipt.ID_user == user_id).first()
-    if not recipe:
-        db.close()
-        messages.error(request, 'Рецепт не найден')
-        return redirect('profile')
+    recipes = db.query(Receipt).order_by(Receipt.ID.desc()).all()
+    
+    result = []
+    for recipe in recipes:
+        try:
+            # Получаем ингредиенты
+            ingredients = db.query(RecipeIngredient)\
+                .options(joinedload(RecipeIngredient.ingredient))\
+                .filter(RecipeIngredient.recipe_id == recipe.ID)\
+                .all()
+            
+            # Получаем категории
+            categories = db.query(Category)\
+                .join(ReceiptCategory)\
+                .filter(ReceiptCategory.Rec_ID == recipe.ID)\
+                .all()
+            
+            # Получаем шаги
+            steps = db.query(Steprecept)\
+                .filter(Steprecept.recipe_ID == recipe.ID)\
+                .order_by(Steprecept.step_number)\
+                .all()
+            
+            # Получаем автора
+            author = db.query(User).filter(User.ID == recipe.ID_user).first()
+            author_name = author.Login if author else 'Неизвестный'
+            
+            # Проверяем избранное
+            user = get_user_from_token(request)
+            is_favorite = False
+            if user:
+                fav = db.query(Favorite).filter(
+                    Favorite.user_id == user.ID,
+                    Favorite.recipe_id == recipe.ID
+                ).first()
+                is_favorite = fav is not None
+            
+            result.append({
+                'id': recipe.ID,
+                'name': recipe.name,
+                'cooking_time': recipe.time,
+                'cookingTime': recipe.time,
+                'calories': recipe.Calories,
+                'description': recipe.description,
+                'categories': [cat.name for cat in categories],
+                'category1': categories[0].name if len(categories) > 0 else '',
+                'category2': categories[1].name if len(categories) > 1 else '',
+                'ingredients': [
+                    {
+                        'name': ing.ingredient.name,
+                        'quantity': str(ing.quantity) if ing.quantity else '',
+                        'unit': ing.unit or ''
+                    }
+                    for ing in ingredients
+                ],
+                'steps': [
+                    {
+                        'text': step.description,
+                        'time': step.timer,
+                        'order': step.step_number
+                    }
+                    for step in steps
+                ],
+                'image': f'/api/recipes/{recipe.ID}/photo/' if recipe.photo_blob else None,
+                'author': author_name,
+                'author_name': author_name,
+                'author_id': recipe.ID_user,
+                'isFavorite': is_favorite
+            })
+        except Exception as e:
+            logger.error(f"Error processing recipe {recipe.ID}: {e}")
+            continue
+    
+    db.close()
+    return JsonResponse(result, safe=False, json_dumps_params={'ensure_ascii': False})
 
-    # Существующие ингредиенты и шаги для предзаполнения
-    ingredients = db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe.ID).all()
-    steps = db.query(Steprecept).filter(Steprecept.recipe_ID == recipe.ID).order_by(Steprecept.step_number).all()
 
-    ingredients_list = [
-        {
-            'ingredient_id': ing.Ingredient_id,
-            'quantity': ing.quantity,
-            'unit': ing.unit,
-        }
-        for ing in ingredients
-    ]
-    steps_list = [
-        {
-            'step_number': step.step_number,
-            'description': step.description,
-            'timer': step.timer,
-        }
-        for step in steps
-    ]
-
-    if request.method == 'POST':
-        recipe_form = RecipeForm(request.POST)
-        ingredient_count = int(request.POST.get('ingredient-count', 0))
-        step_count = int(request.POST.get('step-count', 0))
-
-        if recipe_form.is_valid():
-            # Обновляем рецепт
-            recipe.name = recipe_form.cleaned_data['name']
-            recipe.time = recipe_form.cleaned_data['time']
-            recipe.Calories = recipe_form.cleaned_data['calories']
-            recipe.description = recipe_form.cleaned_data['description']
-            recipe.photo = recipe_form.cleaned_data['photo']
-            db.commit()
-
-            # Категории
-            db.query(ReceiptCategory).filter(ReceiptCategory.Rec_ID == recipe.ID).delete()
-            cat_str = recipe_form.cleaned_data.get('categories')
-            if cat_str:
-                cat_ids = [int(x.strip()) for x in cat_str.split(',') if x.strip().isdigit()]
-                for cat_id in cat_ids:
-                    rc = ReceiptCategory(Rec_ID=recipe.ID, Cat_Id=cat_id)
-                    db.add(rc)
-
-            # Ингредиенты
-            db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe.ID).delete()
-            for i in range(ingredient_count):
-                ing_id = request.POST.get(f'ingredient_id_{i}')
-                quantity = request.POST.get(f'quantity_{i}')
-                unit = request.POST.get(f'unit_{i}')
-                if ing_id and ing_id.isdigit():
-                    ri = RecipeIngredient(
-                        recipe_id=recipe.ID,
-                        Ingredient_id=int(ing_id),
-                        quantity=quantity,
-                        unit=unit
-                    )
-                    db.add(ri)
-
-            # Шаги
-            db.query(Steprecept).filter(Steprecept.recipe_ID == recipe.ID).delete()
-            for i in range(step_count):
-                step_num = request.POST.get(f'step_number_{i}')
-                description = request.POST.get(f'step_description_{i}')
-                timer = request.POST.get(f'step_timer_{i}')
-                if step_num and step_num.isdigit() and description:
-                    step = Steprecept(
-                        recipe_ID=recipe.ID,
-                        step_number=int(step_num),
-                        description=description,
-                        timer=timer
-                    )
-                    db.add(step)
-
-            db.commit()
+def api_recipe_detail(request, recipe_id):
+    if request.method != 'GET':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        print(f"\n=== GET RECIPE DETAIL {recipe_id} ===")
+        
+        db = next(get_db())
+        recipe = db.query(Receipt).filter(Receipt.ID == recipe_id).first()
+        
+        if not recipe:
+            print(f"Recipe {recipe_id} not found in database")
             db.close()
-            messages.success(request, 'Рецепт обновлён')
-            return redirect('profile')
-    else:
-        # Предзаполняем форму
-        cat_ids = [rc.Cat_Id for rc in db.query(ReceiptCategory).filter(ReceiptCategory.Rec_ID == recipe.ID).all()]
-        cat_str = ','.join(str(cid) for cid in cat_ids)
-        recipe_form = RecipeForm(initial={
+            return json_response({'error': 'Рецепт не найден'}, 404)
+        
+        print(f"Found recipe: {recipe.name}, ID: {recipe.ID}, user_id: {recipe.ID_user}")
+        
+        # Получаем ингредиенты
+        ingredients = db.query(RecipeIngredient)\
+            .options(joinedload(RecipeIngredient.ingredient))\
+            .filter(RecipeIngredient.recipe_id == recipe.ID)\
+            .all()
+        print(f"Ingredients count: {len(ingredients)}")
+        
+        # Получаем категории
+        categories = db.query(Category)\
+            .join(ReceiptCategory)\
+            .filter(ReceiptCategory.Rec_ID == recipe.ID)\
+            .all()
+        print(f"Categories count: {len(categories)}")
+        
+        # Получаем шаги
+        steps = db.query(Steprecept)\
+            .filter(Steprecept.recipe_ID == recipe.ID)\
+            .order_by(Steprecept.step_number)\
+            .all()
+        print(f"Steps count: {len(steps)}")
+        
+        # Получаем автора
+        author = db.query(User).filter(User.ID == recipe.ID_user).first()
+        author_name = author.Login if author else 'Неизвестный'
+        
+        # Проверяем избранное
+        user = get_user_from_token(request)
+        is_favorite = False
+        if user:
+            fav = db.query(Favorite).filter(
+                Favorite.user_id == user.ID,
+                Favorite.recipe_id == recipe.ID
+            ).first()
+            is_favorite = fav is not None
+        
+        # Формируем результат
+        result = {
+            'id': recipe.ID,
             'name': recipe.name,
-            'time': recipe.time,
+            'cooking_time': recipe.time,
+            'cookingTime': recipe.time,
             'calories': recipe.Calories,
             'description': recipe.description,
-            'photo': recipe.photo,
-            'categories': cat_str,
-        })
-
-    db.close()
-    return render(request, 'recipes/recipe_form.html', {
-        'form': recipe_form,
-        'title': 'Редактирование рецепта',
-        'ingredients': ingredients_list,
-        'steps': steps_list,
-    })
-
-
-# --------------------- Удаление рецепта ---------------------
-def recipe_delete(request, recipe_id):
-    """Удаление рецепта."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    db = next(get_db())
-    recipe = db.query(Receipt).filter(Receipt.ID == recipe_id, Receipt.ID_user == user_id).first()
-    if not recipe:
+            'categories': [cat.name for cat in categories],
+            'category1': categories[0].name if len(categories) > 0 else '',
+            'category2': categories[1].name if len(categories) > 1 else '',
+            'ingredients': [],
+            'steps': [],
+            'image': f'/api/recipes/{recipe.ID}/photo/' if recipe.photo_blob else None,
+            'author': author_name,
+            'author_name': author_name,
+            'author_id': recipe.ID_user,
+            'isFavorite': is_favorite
+        }
+        
+        # Добавляем ингредиенты
+        for ing in ingredients:
+            try:
+                result['ingredients'].append({
+                    'name': ing.ingredient.name,
+                    'quantity': str(ing.quantity) if ing.quantity else '',
+                    'unit': ing.unit or ''
+                })
+            except Exception as e:
+                print(f"Error processing ingredient: {e}")
+                result['ingredients'].append({
+                    'name': 'Ошибка',
+                    'quantity': '',
+                    'unit': ''
+                })
+        
+        # Добавляем шаги
+        for step in steps:
+            try:
+                result['steps'].append({
+                    'text': step.description,
+                    'time': step.timer,
+                    'order': step.step_number
+                })
+            except Exception as e:
+                print(f"Error processing step: {e}")
+                result['steps'].append({
+                    'text': 'Ошибка',
+                    'time': 0,
+                    'order': 0
+                })
+        
         db.close()
-        messages.error(request, 'Рецепт не найден')
-        return redirect('profile')
+        print(f"Recipe {recipe_id} data prepared successfully")
+        
+        return json_response(result)
+        
+    except Exception as e:
+        print(f"ERROR in api_recipe_detail: {e}")
+        import traceback
+        traceback.print_exc()
+        return json_response({'error': str(e)}, 500)
 
-    if request.method == 'POST':
-        # Удаляем связанные записи
+
+@csrf_exempt
+def api_recipe_create(request):
+    """Создание нового рецепта (только POST)"""
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        print("\n" + "="*60)
+        print("CREATE RECIPE - START")
+        print("="*60)
+        
+        # Получаем пользователя из токена
+        user = get_user_from_token(request)
+        
+        if not user:
+            print("❌ No user found from token")
+            return json_response({'error': 'Не авторизован. Пожалуйста, войдите в систему.'}, 401)
+        
+        print(f"User found: ID={user.ID}, Login={user.Login}")
+        
+        # Читаем данные
+        body = request.body.decode('utf-8')
+        print(f"Raw body: {body}")
+        
+        if not body:
+            return json_response({'error': 'Пустой запрос'}, 400)
+        
+        data = json.loads(body)
+        print(f"Parsed data: {json.dumps(data, ensure_ascii=False, indent=2)}")
+        
+        # Проверяем обязательные поля
+        if not data.get('name'):
+            return json_response({'error': 'Название рецепта обязательно'}, 400)
+        
+        db = next(get_db())
+        
+        try:
+            # Создаём рецепт
+            new_recipe = Receipt(
+                name=data.get('name'),
+                time=data.get('cooking_time', data.get('cookingTime', 0)),
+                Calories=data.get('calories', 0),
+                description=data.get('description', ''),
+                ID_user=user.ID,
+                photo_blob=None,
+                photo_mime_type=None
+            )
+            db.add(new_recipe)
+            db.flush()
+            recipe_id = new_recipe.ID
+            
+            print(f"Recipe created with ID: {recipe_id}")
+            
+            # Обработка категорий
+            categories = []
+            if 'categories' in data and isinstance(data['categories'], list):
+                categories = data['categories']
+            else:
+                if data.get('category1'):
+                    categories.append(data.get('category1'))
+                if data.get('category2'):
+                    categories.append(data.get('category2'))
+            
+            for cat_name in categories:
+                if cat_name and cat_name.strip():
+                    category = db.query(Category).filter(Category.name.ilike(cat_name.strip())).first()
+                    if not category:
+                        category = Category(name=cat_name.strip())
+                        db.add(category)
+                        db.flush()
+                    rc = ReceiptCategory(Rec_ID=recipe_id, Cat_Id=category.ID)
+                    db.add(rc)
+            
+            # Обработка ингредиентов
+            for ing in data.get('ingredients', []):
+                ing_name = ing.get('name', '').strip()
+                if ing_name:
+                    ingredient = db.query(Ingredient).filter(Ingredient.name.ilike(ing_name)).first()
+                    if not ingredient:
+                        ingredient = Ingredient(name=ing_name)
+                        db.add(ingredient)
+                        db.flush()
+                    
+                    quantity = ing.get('quantity', '')
+                    if quantity == '' or quantity is None:
+                        quantity = None
+                    elif isinstance(quantity, str) and quantity.strip() == '':
+                        quantity = None
+                    else:
+                        try:
+                            quantity = float(quantity)
+                        except (ValueError, TypeError):
+                            quantity = None
+                    
+                    ri = RecipeIngredient(
+                        recipe_id=recipe_id,
+                        Ingredient_id=ingredient.id_in,
+                        quantity=quantity,
+                        unit=ing.get('unit', '')
+                    )
+                    db.add(ri)
+            
+            # Обработка шагов
+            for idx, step in enumerate(data.get('steps', [])):
+                step_text = step.get('text', '').strip()
+                if step_text:
+                    step_obj = Steprecept(
+                        recipe_ID=recipe_id,
+                        step_number=idx + 1,
+                        description=step_text,
+                        timer=int(step.get('time', 0)) if step.get('time') else 0
+                    )
+                    db.add(step_obj)
+            
+            db.commit()
+            
+            print(f"✅ Recipe {recipe_id} created successfully!")
+            print("="*60 + "\n")
+            
+            return json_response({
+                'id': recipe_id,
+                'message': 'Рецепт создан'
+            })
+            
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON decode error: {e}")
+        return json_response({'error': f'Ошибка парсинга JSON: {str(e)}'}, 400)
+    except Exception as e:
+        print(f"❌ Error creating recipe: {e}")
+        import traceback
+        traceback.print_exc()
+        return json_response({'error': str(e)}, 500)
+
+
+@csrf_exempt
+def api_recipe_update(request, recipe_id):
+    if request.method != 'PUT':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        user = get_user_from_token(request)
+        if not user:
+            return json_response({'error': 'Не авторизован'}, 401)
+        
+        data = json.loads(request.body)
+        
+        db = next(get_db())
+        
+        try:
+            recipe = db.query(Receipt).filter(Receipt.ID == recipe_id, Receipt.ID_user == user.ID).first()
+            if not recipe:
+                db.close()
+                return json_response({'error': 'Рецепт не найден или нет прав'}, 404)
+            
+            # Обновляем основные поля
+            recipe.name = data.get('name', recipe.name)
+            recipe.time = data.get('cooking_time', data.get('cookingTime', recipe.time))
+            recipe.Calories = data.get('calories', recipe.Calories)
+            recipe.description = data.get('description', recipe.description)
+            db.flush()
+            
+            # Обновляем категории
+            db.query(ReceiptCategory).filter(ReceiptCategory.Rec_ID == recipe.ID).delete()
+            categories = []
+            if 'categories' in data and isinstance(data['categories'], list):
+                categories = data['categories']
+            else:
+                if data.get('category1'):
+                    categories.append(data.get('category1'))
+                if data.get('category2'):
+                    categories.append(data.get('category2'))
+            
+            for cat_name in categories:
+                if cat_name and cat_name.strip():
+                    category = db.query(Category).filter(Category.name.ilike(cat_name.strip())).first()
+                    if not category:
+                        category = Category(name=cat_name.strip())
+                        db.add(category)
+                        db.flush()
+                    rc = ReceiptCategory(Rec_ID=recipe.ID, Cat_Id=category.ID)
+                    db.add(rc)
+            
+            # Обновляем ингредиенты
+            db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe.ID).delete()
+            for ing in data.get('ingredients', []):
+                ing_name = ing.get('name', '').strip()
+                if ing_name:
+                    ingredient = db.query(Ingredient).filter(Ingredient.name.ilike(ing_name)).first()
+                    if not ingredient:
+                        ingredient = Ingredient(name=ing_name)
+                        db.add(ingredient)
+                        db.flush()
+                    
+                    quantity = ing.get('quantity', '')
+                    if quantity == '' or quantity is None:
+                        quantity = None
+                    elif isinstance(quantity, str) and quantity.strip() == '':
+                        quantity = None
+                    else:
+                        try:
+                            quantity = float(quantity)
+                        except (ValueError, TypeError):
+                            quantity = None
+                    
+                    ri = RecipeIngredient(
+                        recipe_id=recipe.ID,
+                        Ingredient_id=ingredient.id_in,
+                        quantity=quantity,
+                        unit=ing.get('unit', '')
+                    )
+                    db.add(ri)
+            
+            # Обновляем шаги
+            db.query(Steprecept).filter(Steprecept.recipe_ID == recipe.ID).delete()
+            for idx, step in enumerate(data.get('steps', [])):
+                step_text = step.get('text', '').strip()
+                if step_text:
+                    step_obj = Steprecept(
+                        recipe_ID=recipe.ID,
+                        step_number=idx + 1,
+                        description=step_text,
+                        timer=int(step.get('time', 0)) if step.get('time') else 0
+                    )
+                    db.add(step_obj)
+            
+            db.commit()
+            
+            return json_response({'message': 'Рецепт обновлен'})
+            
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+        
+    except Exception as e:
+        return json_response({'error': str(e)}, 500)
+
+
+@csrf_exempt
+def api_recipe_delete(request, recipe_id):
+    if request.method != 'DELETE':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user:
+        return json_response({'error': 'Не авторизован'}, 401)
+    
+    db = next(get_db())
+    
+    try:
+        recipe = db.query(Receipt).filter(Receipt.ID == recipe_id, Receipt.ID_user == user.ID).first()
+        if not recipe:
+            return json_response({'error': 'Рецепт не найден или нет прав'}, 404)
+        
         db.query(ReceiptCategory).filter(ReceiptCategory.Rec_ID == recipe.ID).delete()
         db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe.ID).delete()
         db.query(Steprecept).filter(Steprecept.recipe_ID == recipe.ID).delete()
         db.query(Favorite).filter(Favorite.recipe_id == recipe.ID).delete()
         db.delete(recipe)
         db.commit()
+        
+        return json_response({'message': 'Рецепт удален'})
+        
+    except Exception as e:
+        db.rollback()
+        return json_response({'error': str(e)}, 500)
+    finally:
         db.close()
-        messages.success(request, 'Рецепт удалён')
-        return redirect('profile')
 
+
+def api_recipe_photo(request, recipe_id):
+    db = next(get_db())
+    recipe = db.query(Receipt).filter(Receipt.ID == recipe_id).first()
+    if not recipe or not recipe.photo_blob:
+        db.close()
+        return HttpResponse(status=404)
+    response = HttpResponse(recipe.photo_blob, content_type=recipe.photo_mime_type)
     db.close()
-    return render(request, 'recipes/recipe_confirm_delete.html', {'recipe': recipe})
+    return response
+
+
+@csrf_exempt
+def api_upload_recipe_image(request, recipe_id):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        user = get_user_from_token(request)
+        if not user:
+            return json_response({'error': 'Не авторизован'}, 401)
+        
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return json_response({'error': 'Файл не загружен'}, 400)
+        
+        image_data = image_file.read()
+        img = Image.open(io.BytesIO(image_data))
+        img_format = img.format.lower()
+        if img_format not in ['jpeg', 'png', 'gif']:
+            return json_response({'error': 'Неподдерживаемый формат изображения'}, 400)
+        
+        db = next(get_db())
+        
+        try:
+            recipe = db.query(Receipt).filter(Receipt.ID == recipe_id, Receipt.ID_user == user.ID).first()
+            if not recipe:
+                return json_response({'error': 'Рецепт не найден или нет прав'}, 404)
+            
+            recipe.photo_blob = image_data
+            recipe.photo_mime_type = f'image/{img_format}'
+            db.commit()
+            
+            return json_response({'message': 'Фото загружено'})
+            
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+        
+    except Exception as e:
+        return json_response({'error': str(e)}, 500)
 
 
 # --------------------- Избранное ---------------------
-def add_to_favorite(request, recipe_id):
-    """Добавление/удаление из избранного."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
+def api_favorites(request):
+    if request.method != 'GET':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse([], safe=False)
+    
     db = next(get_db())
-    recipe = db.query(Receipt).filter(Receipt.ID == recipe_id).first()
-    if not recipe:
-        db.close()
-        messages.error(request, 'Рецепт не найден')
-        return redirect('index')
-
-    fav = db.query(Favorite).filter(
-        Favorite.user_id == user_id,
-        Favorite.recipe_id == recipe_id
-    ).first()
-    if fav:
-        db.delete(fav)
-        messages.success(request, 'Рецепт удалён из избранного')
-    else:
-        new_fav = Favorite(user_id=user_id, recipe_id=recipe_id)
-        db.add(new_fav)
-        messages.success(request, 'Рецепт добавлен в избранное')
-    db.commit()
+    favorites = db.query(Favorite).filter(Favorite.user_id == user.ID).all()
+    result = [{'recipe_id': fav.recipe_id, 'id': fav.ID} for fav in favorites]
     db.close()
-    return redirect(request.META.get('HTTP_REFERER', 'index'))
+    return JsonResponse(result, safe=False, json_dumps_params={'ensure_ascii': False})
 
 
-# --------------------- Смена пароля ---------------------
-def change_password(request):
-    """Смена пароля."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    db = next(get_db())
-    user = db.query(User).filter(User.ID == user_id).first()
-
-    if request.method == 'POST':
-        form = ChangePasswordForm(request.POST)
-        if form.is_valid():
-            old = form.cleaned_data['old_password']
-            if check_password(old, user.Password):
-                new = form.cleaned_data['new_password1']
-                user.Password = make_password(new)
+@csrf_exempt
+def api_add_favorite(request):
+    if request.method != 'POST':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        user = get_user_from_token(request)
+        if not user:
+            return json_response({'error': 'Не авторизован'}, 401)
+        
+        data = json.loads(request.body)
+        recipe_id = data.get('recipe_id')
+        if not recipe_id:
+            return json_response({'error': 'recipe_id обязателен'}, 400)
+        
+        db = next(get_db())
+        
+        try:
+            existing = db.query(Favorite).filter(
+                Favorite.user_id == user.ID,
+                Favorite.recipe_id == recipe_id
+            ).first()
+            
+            if not existing:
+                new_fav = Favorite(user_id=user.ID, recipe_id=recipe_id)
+                db.add(new_fav)
                 db.commit()
-                messages.success(request, 'Пароль изменён')
-                db.close()
-                return redirect('profile')
-            else:
-                messages.error(request, 'Неверный старый пароль')
-    else:
-        form = ChangePasswordForm()
-
-    db.close()
-    return render(request, 'recipes/change_password.html', {'form': form})
-
-
-# --------------------- Смена аватарки ---------------------
-def change_avatar(request):
-    """Смена аватарки из пресетов."""
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
-
-    db = next(get_db())
-    user = db.query(User).filter(User.ID == user_id).first()
-
-    if request.method == 'POST':
-        form = AvatarChangeForm(request.POST)
-        if form.is_valid():
-            user.Image = form.cleaned_data['avatar']
-            db.commit()
-            messages.success(request, 'Аватарка обновлена')
+            
+            return json_response({'message': 'Добавлено в избранное'})
+            
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
             db.close()
-            return redirect('profile')
-    else:
-        form = AvatarChangeForm(initial={'avatar': user.Image})
+        
+    except Exception as e:
+        return json_response({'error': str(e)}, 500)
 
-    db.close()
-    return render(request, 'recipes/change_avatar.html', {'form': form})
+
+@csrf_exempt
+def api_remove_favorite(request, recipe_id):
+    if request.method != 'DELETE':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    user = get_user_from_token(request)
+    if not user:
+        return json_response({'error': 'Не авторизован'}, 401)
+    
+    db = next(get_db())
+    
+    try:
+        fav = db.query(Favorite).filter(
+            Favorite.user_id == user.ID,
+            Favorite.recipe_id == recipe_id
+        ).first()
+        if fav:
+            db.delete(fav)
+            db.commit()
+        
+        return json_response({'message': 'Удалено из избранного'})
+        
+    except Exception as e:
+        db.rollback()
+        return json_response({'error': str(e)}, 500)
+    finally:
+        db.close()
+
+
+# --------------------- Обработчики ---------------------
+@csrf_exempt
+def api_recipes_handler(request):
+    """Обрабатывает GET (список) и POST (создание) запросы"""
+    if request.method == 'GET':
+        return api_recipes(request)
+    elif request.method == 'POST':
+        return api_recipe_create(request)
+    else:
+        return json_response({'error': 'Метод не разрешен'}, 405)
+
+
+@csrf_exempt
+def api_recipe_detail_handler(request, recipe_id):
+    """Обрабатывает GET (детали), PUT (обновление), DELETE (удаление) запросы"""
+    if request.method == 'GET':
+        return api_recipe_detail(request, recipe_id)
+    elif request.method == 'PUT':
+        return api_recipe_update(request, recipe_id)
+    elif request.method == 'DELETE':
+        return api_recipe_delete(request, recipe_id)
+    else:
+        return json_response({'error': 'Метод не разрешен'}, 405)

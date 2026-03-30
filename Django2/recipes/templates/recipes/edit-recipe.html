@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование рецепта</title>
+    <link rel="stylesheet" href="/static/css/edit-recipe.css">
+    <style>
+        /* Уникальные стили для уведомлений и анимаций */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5A8F4C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification-error {
+            background-color: #D46B3A;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(155, 94, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: #9B5E2E;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+       <div class="logo">
+            <a href="main.html" class="logo"><img src="/static/images/Logo.png"></a>
+        </div>
+        <div class="profile-icon" id="profileIcon">
+            <img src="/static/images/Ellipse 21.png" class="profile-img" id="profileAvatar">
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">Профиль</a>
+                <button class="dropdown-item" id="editProfileInDropdownBtn">Редактировать</button>
+                <button class="dropdown-item" id="logoutBtn">Выйти</button>
+            </div>
+        </div> 
+    </header>
+    
+    <h1 class="tl">Редактирование рецепта</h1>
+    
+    <main class="information-container">
+        <div class="image-wrapper">
+            <div class="image-label">Блюдо</div>
+            <div class="recipe-image-box" id="imageBox">
+                <div class="placeholder">Нажмите для выбора фото</div>
+            </div>
+            <div class="ingredients-wrapper">
+                <div class="form-field ingredients-field">
+                    <label>Ингредиенты</label>
+                    <div id="ingredientsList" class="ingredients-list"></div>
+                </div>
+                <button class="ingredient-add-button" id="addIngredientButton">
+                    <img src="/static/images/plus.png" alt="Добавить">
+                </button>
+            </div>
+        </div>
+        
+        <div class="recipe-form-fields">
+            <div class="form-field">
+                <label>Название рецепта</label>
+                <input type="text" id="recipeName" placeholder="Введите название рецепта">
+            </div>
+            
+            <div class="form-field">
+                <label>Категории</label>
+                <div class="categories-input">
+                    <input type="text" id="category1" placeholder="Категория 1">
+                    <input type="text" id="category2" placeholder="Категория 2">
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label>Время готовки (мин.)</label>
+                <input type="number" id="cookingTime" placeholder="Введите время готовки" min="0" step="1">
+            </div>
+            
+            <div class="form-field">
+                <label>Калории</label>
+                <input type="number" id="calories" placeholder="Введите количество калорий" min="0" step="1">
+            </div>
+            
+            <div class="form-field">
+                <label>Краткое описание</label>
+                <textarea id="description" placeholder="Введите краткое описание рецепта"></textarea>
+            </div>
+            
+            <div class="steps-section">
+                <div class="steps-header">
+                    <label>Пошаговый рецепт</label>
+                    <button class="add-step-button" id="addStepButton">
+                        <img src="/static/images/plus.png" alt="Добавить шаг">
+                    </button>
+                </div>
+                <div id="stepsContainer" class="steps-list"></div>
+            </div>
+            
+            <div class="description-container">
+                <button class="description-button save-button" id="saveRecipeButton">Сохранить изменения</button>
+                <button class="description-button delete-button" id="deleteRecipeButton">Удалить рецепт</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно для редактирования профиля -->
+    <div class="profile-modal-overlay" id="editProfileModal">
+        <div class="profile-modal-container">
+            <div class="profile-modal-header">
+                <h2>Редактировать профиль</h2>
+                <button class="profile-modal-close" id="closeProfileModalBtn">&times;</button>
+            </div>
+            <div class="profile-modal-body">
+                <div class="avatar-section">
+                    <img id="modalAvatarPreview" class="current-avatar-large" src="/static/images/Ellipse 21.png" alt="Аватар">
+                    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                    <button class="avatar-upload-btn" id="uploadAvatarBtn">📷 Загрузить фото</button>
+                </div>
+                <div class="profile-form-field">
+                    <label>Текущий пароль</label>
+                    <input type="password" id="currentPassword" placeholder="Введите текущий пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Новый пароль</label>
+                    <input type="password" id="newPassword" placeholder="Введите новый пароль">
+                </div>
+                <div class="profile-form-field">
+                    <label>Подтвердите новый пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль">
+                </div>
+            </div>
+            <div class="profile-modal-footer">
+                <button class="profile-modal-btn profile-modal-btn-cancel" id="cancelProfileModalBtn">Отмена</button>
+                <button class="profile-modal-btn profile-modal-btn-save" id="saveProfileBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        // Вспомогательные функции
+        const getToken = () => localStorage.getItem('authToken');
+        const getUserId = () => localStorage.getItem('userId');
+        const isAuthenticated = () => !!getToken();
+        
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            if (isError) {
+                notification.classList.add('notification-error');
+            }
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function showLoading() {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = '<div class="loading-content"><div class="loading-spinner"></div><br>Загрузка...</div>';
+            document.body.appendChild(overlay);
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.remove();
+        }
+        
+        async function apiCall(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                ...options,
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Ошибка запроса' }));
+                throw new Error(error.message || 'Ошибка сервера');
+            }
+            
+            return response.json();
+        }
+        
+        // Защита от отрицательных чисел
+        function protectNumberField(field) {
+            if (!field) return;
+            
+            const sanitizeValue = () => {
+                let value = parseFloat(field.value);
+                if (isNaN(value)) value = 0;
+                if (value < 0) value = 0;
+                field.value = value;
+            };
+            
+            field.addEventListener('input', sanitizeValue);
+            field.addEventListener('change', sanitizeValue);
+            field.addEventListener('blur', sanitizeValue);
+            sanitizeValue();
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        
+        // Глобальные переменные
+        let currentRecipeId = null;
+        let imageFile = null;
+        let currentAvatarUrl = '/static/images/Ellipse 21.png';
+        let tempAvatarFile = null;
+        
+        // Получение ID рецепта из URL
+        function getRecipeIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            console.log('Recipe ID from URL:', id);
+            return id;
+        }
+        
+        // Загрузка рецепта для редактирования
+        async function loadRecipe() {
+            const id = getRecipeIdFromUrl();
+            if (!id) {
+                showNotification('Рецепт не найден', true);
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 2000);
+                return;
+            }
+            
+            currentRecipeId = id;
+            showLoading();
+            
+            try {
+                console.log('Loading recipe:', id);
+                const recipe = await apiCall(`/recipes/${id}/`);
+                console.log('Recipe loaded:', recipe);
+                
+                // Заполняем поля формы
+                document.getElementById('recipeName').value = recipe.name || '';
+                document.getElementById('category1').value = recipe.category1 || '';
+                document.getElementById('category2').value = recipe.category2 || '';
+                document.getElementById('cookingTime').value = recipe.cooking_time || 0;
+                document.getElementById('calories').value = recipe.calories || 0;
+                document.getElementById('description').value = recipe.description || '';
+                
+                // Защита числовых полей
+                protectNumberField(document.getElementById('cookingTime'));
+                protectNumberField(document.getElementById('calories'));
+                
+                // Загружаем ингредиенты
+                if (recipe.ingredients && recipe.ingredients.length > 0) {
+                    const container = document.getElementById('ingredientsList');
+                    container.innerHTML = recipe.ingredients.map((ing, idx) => `
+                        <div class="ingredient-item" data-index="${idx}">
+                            <input type="text" class="ingredient-name" value="${escapeHtml(ing.name)}" placeholder="Название">
+                            <input type="number" class="ingredient-quantity" value="${escapeHtml(ing.quantity || 0)}" placeholder="Кол-во" step="0.1" min="0">
+                            <input type="text" class="ingredient-unit" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
+                            <button class="delete-ingredient-button" type="button">
+                                <img src="/static/images/delete.png" alt="Удалить">
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    // Защита полей количества
+                    document.querySelectorAll('.ingredient-quantity').forEach(protectNumberField);
+                    
+                    // Добавляем обработчики удаления
+                    document.querySelectorAll('.delete-ingredient-button').forEach(btn => {
+                        btn.onclick = () => btn.closest('.ingredient-item').remove();
+                    });
+                }
+                
+                // Загружаем шаги
+                if (recipe.steps && recipe.steps.length > 0) {
+                    const container = document.getElementById('stepsContainer');
+                    container.innerHTML = recipe.steps.map((step, idx) => `
+                        <div class="step-item" data-index="${idx}">
+                            <div class="step-number">${idx + 1}</div>
+                            <div class="step-content">
+                                <textarea class="step-textarea" placeholder="Опишите шаг...">${escapeHtml(step.text)}</textarea>
+                                <div class="step-time-wrapper">
+                                    <input type="number" class="step-time-input" value="${step.time || 0}" placeholder="Время" min="0">
+                                    <span class="step-time-label">мин.</span>
+                                </div>
+                            </div>
+                            <button class="delete-step-button" type="button">
+                                <img src="/static/images/delete.png" alt="Удалить">
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    // Защита полей времени
+                    document.querySelectorAll('.step-time-input').forEach(protectNumberField);
+                    
+                    // Добавляем обработчики удаления и обновления номеров
+                    document.querySelectorAll('.delete-step-button').forEach(btn => {
+                        btn.onclick = () => {
+                            btn.closest('.step-item').remove();
+                            updateStepNumbers();
+                        };
+                    });
+                }
+                
+                // Загружаем изображение
+                if (recipe.image) {
+                    const img = document.createElement('img');
+                    img.src = recipe.image;
+                    const imageBox = document.getElementById('imageBox');
+                    imageBox.innerHTML = '';
+                    imageBox.appendChild(img);
+                }
+                
+            } catch (error) {
+                console.error('Error loading recipe:', error);
+                showNotification(error.message || 'Ошибка загрузки рецепта', true);
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 2000);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function updateStepNumbers() {
+            const steps = document.querySelectorAll('.step-item');
+            steps.forEach((step, idx) => {
+                const stepNumber = step.querySelector('.step-number');
+                if (stepNumber) {
+                    stepNumber.textContent = idx + 1;
+                }
+            });
+        }
+        
+        // Сохранение рецепта
+        async function saveRecipe() {
+            // Получаем значения
+            let cookingTime = parseInt(document.getElementById('cookingTime').value) || 0;
+            let calories = parseInt(document.getElementById('calories').value) || 0;
+            cookingTime = Math.max(0, cookingTime);
+            calories = Math.max(0, calories);
+            
+            // Собираем ингредиенты
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                const name = item.querySelector('.ingredient-name')?.value.trim();
+                if (name) {
+                    let quantity = item.querySelector('.ingredient-quantity')?.value || '';
+                    if (quantity !== '') {
+                        const numQuantity = parseFloat(quantity);
+                        if (!isNaN(numQuantity) && numQuantity < 0) quantity = '0';
+                        if (!isNaN(numQuantity) && numQuantity > 0) quantity = numQuantity.toString();
+                    }
+                    
+                    ingredients.push({
+                        name: name,
+                        quantity: quantity,
+                        unit: item.querySelector('.ingredient-unit')?.value || ''
+                    });
+                }
+            });
+            
+            // Собираем шаги
+            const steps = [];
+            document.querySelectorAll('.step-item').forEach((item, idx) => {
+                const text = item.querySelector('.step-textarea')?.value.trim();
+                if (text) {
+                    let time = parseInt(item.querySelector('.step-time-input')?.value) || 0;
+                    time = Math.max(0, time);
+                    
+                    steps.push({
+                        text: text,
+                        time: time,
+                        order: idx + 1
+                    });
+                }
+            });
+            
+            const recipeData = {
+                name: document.getElementById('recipeName').value.trim(),
+                category1: document.getElementById('category1').value.trim(),
+                category2: document.getElementById('category2').value.trim(),
+                cooking_time: cookingTime,
+                calories: calories,
+                description: document.getElementById('description').value.trim(),
+                ingredients: ingredients,
+                steps: steps
+            };
+            
+            // Валидация
+            if (!recipeData.name) {
+                showNotification('Введите название рецепта', true);
+                return;
+            }
+            
+            if (ingredients.length === 0) {
+                showNotification('Добавьте хотя бы один ингредиент', true);
+                return;
+            }
+            
+            if (steps.length === 0) {
+                showNotification('Добавьте хотя бы один шаг приготовления', true);
+                return;
+            }
+            
+            const saveBtn = document.getElementById('saveRecipeButton');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
+            
+            try {
+                await apiCall(`/recipes/${currentRecipeId}/`, {
+                    method: 'PUT',
+                    body: JSON.stringify(recipeData)
+                });
+                
+                // Загружаем изображение, если есть
+                if (imageFile) {
+                    const formData = new FormData();
+                    formData.append('image', imageFile);
+                    await fetch(`${API_BASE_URL}/recipes/${currentRecipeId}/upload-image/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                }
+                
+                showNotification('Рецепт успешно сохранен!');
+                setTimeout(() => {
+                    window.location.href = `information.html?id=${currentRecipeId}`;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error saving recipe:', error);
+                showNotification(error.message || 'Ошибка при сохранении рецепта', true);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Сохранить изменения';
+            }
+        }
+        
+        // Удаление рецепта
+        async function deleteRecipe() {
+            if (!confirm('Вы уверены, что хотите удалить этот рецепт? Это действие нельзя отменить.')) {
+                return;
+            }
+            
+            const deleteBtn = document.getElementById('deleteRecipeButton');
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="loading-spinner"></span> Удаление...';
+            
+            try {
+                await apiCall(`/recipes/${currentRecipeId}/`, { method: 'DELETE' });
+                showNotification('Рецепт удален');
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Error deleting recipe:', error);
+                showNotification(error.message || 'Ошибка при удалении рецепта', true);
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = 'Удалить рецепт';
+            }
+        }
+        
+        // Загрузка изображения
+        document.getElementById('imageBox').onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file && file.size <= 5 * 1024 * 1024) {
+                    imageFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = document.createElement('img');
+                        img.src = ev.target.result;
+                        const imageBox = document.getElementById('imageBox');
+                        imageBox.innerHTML = '';
+                        imageBox.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file) {
+                    showNotification('Файл больше 5MB', true);
+                }
+            };
+            input.click();
+        };
+        
+        // Добавление ингредиента
+        document.getElementById('addIngredientButton').onclick = () => {
+            const container = document.getElementById('ingredientsList');
+            const div = document.createElement('div');
+            div.className = 'ingredient-item';
+            div.innerHTML = `
+                <input type="text" class="ingredient-name" placeholder="Название">
+                <input type="number" class="ingredient-quantity" placeholder="Кол-во" step="0.1" min="0" value="0">
+                <input type="text" class="ingredient-unit" placeholder="шт/г/кг">
+                <button class="delete-ingredient-button" type="button">
+                    <img src="/static/images/delete.png" alt="Удалить">
+                </button>
+            `;
+            
+            const quantityInput = div.querySelector('.ingredient-quantity');
+            protectNumberField(quantityInput);
+            
+            div.querySelector('.delete-ingredient-button').onclick = () => div.remove();
+            container.appendChild(div);
+            div.querySelector('.ingredient-name').focus();
+        };
+        
+        // Добавление шага
+        document.getElementById('addStepButton').onclick = () => {
+            const container = document.getElementById('stepsContainer');
+            const div = document.createElement('div');
+            div.className = 'step-item';
+            const stepNum = container.children.length + 1;
+            div.innerHTML = `
+                <div class="step-number">${stepNum}</div>
+                <div class="step-content">
+                    <textarea class="step-textarea" placeholder="Опишите шаг приготовления..."></textarea>
+                    <div class="step-time-wrapper">
+                        <input type="number" class="step-time-input" placeholder="Время" min="0" value="0">
+                        <span class="step-time-label">мин.</span>
+                    </div>
+                </div>
+                <button class="delete-step-button" type="button">
+                    <img src="/static/images/delete.png" alt="Удалить">
+                </button>
+            `;
+            
+            const timeInput = div.querySelector('.step-time-input');
+            protectNumberField(timeInput);
+            
+            div.querySelector('.delete-step-button').onclick = () => {
+                div.remove();
+                updateStepNumbers();
+            };
+            
+            container.appendChild(div);
+            div.querySelector('.step-textarea').focus();
+        };
+        
+        // ========== ПРОФИЛЬ И АВАТАР ==========
+        async function loadUserAvatar() {
+            try {
+                const userId = getUserId();
+                if (!userId) return;
+                
+                const user = await apiCall(`/users/${userId}/`);
+                if (user.avatar) {
+                    currentAvatarUrl = user.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatarUrl;
+                    document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                }
+            } catch (error) {
+                console.error('Error loading avatar:', error);
+            }
+        }
+        
+        // Модальное окно
+        const modal = document.getElementById('editProfileModal');
+        
+        function openModal() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+            tempAvatarFile = null;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            tempAvatarFile = null;
+        }
+        
+        async function saveProfile() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const hasPasswordChange = !!newPassword;
+            const hasAvatarChange = !!tempAvatarFile;
+            
+            if (!hasPasswordChange && !hasAvatarChange) {
+                closeModal();
+                return;
+            }
+            
+            if (hasPasswordChange) {
+                if (!currentPassword) {
+                    showNotification('Введите текущий пароль', true);
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    showNotification('Пароли не совпадают', true);
+                    return;
+                }
+                if (newPassword.length < 4) {
+                    showNotification('Минимум 4 символа', true);
+                    return;
+                }
+            }
+            
+            const saveBtn = document.getElementById('saveProfileBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
+            
+            try {
+                if (hasPasswordChange) {
+                    await apiCall(`/users/${getUserId()}/change-password/`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            new_password: newPassword
+                        })
+                    });
+                    showNotification('Пароль изменен');
+                }
+                
+                if (hasAvatarChange) {
+                    const formData = new FormData();
+                    formData.append('avatar', tempAvatarFile);
+                    
+                    const response = await fetch(`${API_BASE_URL}/users/${getUserId()}/upload-avatar/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    currentAvatarUrl = data.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatarUrl;
+                    document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                    showNotification('Аватар обновлен');
+                }
+                
+                closeModal();
+                
+            } catch (error) {
+                showNotification(error.message, true);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Сохранить';
+            }
+        }
+        
+        document.getElementById('uploadAvatarBtn').onclick = () => document.getElementById('avatarUpload').click();
+        document.getElementById('avatarUpload').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file && file.size <= 5 * 1024 * 1024) {
+                tempAvatarFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    document.getElementById('modalAvatarPreview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                showNotification('Файл больше 5MB', true);
+            }
+        };
+        
+        document.getElementById('closeProfileModalBtn').onclick = closeModal;
+        document.getElementById('cancelProfileModalBtn').onclick = closeModal;
+        document.getElementById('saveProfileBtn').onclick = saveProfile;
+        modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+        
+        // Выпадающее меню
+        const profileIcon = document.getElementById('profileIcon');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        
+        if (profileIcon) {
+            profileIcon.onclick = (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            };
+        }
+        
+        document.onclick = () => {
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
+        };
+        
+        document.getElementById('editProfileInDropdownBtn').onclick = (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.remove('show');
+            openModal();
+        };
+        
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            window.location.href = 'enter.html';
+        };
+        
+        // Кнопки сохранения и удаления
+        document.getElementById('saveRecipeButton').onclick = saveRecipe;
+        document.getElementById('deleteRecipeButton').onclick = deleteRecipe;
+        
+        // Инициализация
+        async function init() {
+            await loadUserAvatar();
+            await loadRecipe();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
