@@ -277,29 +277,32 @@
                 .replace(/'/g, '&#39;');
         }
         
-        function renderIngredients(ingredients) {
-            const container = document.getElementById('ingredientsList');
-            if (!container) return;
-            
-            if (!ingredients || ingredients.length === 0) {
-                container.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
-                return;
+function renderIngredients(ingredients) {
+    const container = document.getElementById('ingredientsList');
+    if (!container) return;
+    
+    if (!ingredients || ingredients.length === 0) {
+        container.innerHTML = '<div class="empty-message">Ингредиенты не указаны</div>';
+        return;
+    }
+    
+    container.innerHTML = ingredients.map(ing => {
+        let text = ing.name;
+        if (ing.quantity && ing.quantity.toString().trim() !== '' && ing.quantity.toString().trim() !== '0') {
+            text += ` — ${ing.quantity}`;
+            const unitStr = ing.unit ? String(ing.unit).trim() : '';
+            if (unitStr) {
+                text += ` ${unitStr}`;
             }
-            
-            container.innerHTML = ingredients.map(ing => {
-                let text = ing.name;
-                if (ing.quantity && ing.quantity.toString().trim() !== '' && ing.quantity.toString().trim() !== '0') {
-                    text += ` — ${ing.quantity}`;
-                    if (ing.unit && ing.unit.trim()) {
-                        text += ` ${ing.unit}`;
-                    }
-                } else if (ing.unit && ing.unit.trim()) {
-                    text += ` — ${ing.unit}`;
-                }
-                return `<div class="ingredient-item"><span class="ingredient-text">${escapeHtml(text)}</span></div>`;
-            }).join('');
+        } else if (ing.unit) {
+            const unitStr = String(ing.unit).trim();
+            if (unitStr) {
+                text += ` — ${unitStr}`;
+            }
         }
-        
+        return `<div class="ingredient-item"><span class="ingredient-text">${escapeHtml(text)}</span></div>`;
+    }).join('');
+}
         function renderSteps(steps) {
             const container = document.getElementById('stepsContainer');
             if (!container) return;
