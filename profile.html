@@ -106,8 +106,8 @@
         const API_BASE_URL = 'http://localhost:8000/api';
         
         // Глобальные переменные
-        let allUserRecipes = [];
-        let favoriteRecipes = [];
+        let allUserRecipes = [];      // Свои рецепты пользователя
+        let favoriteRecipes = [];     // ID избранных рецептов (могут быть чужими)
         let showOnlyFavorites = false;
         let currentUser = null;
         let currentAvatarUrl = 'images/Ellipse 21.png';
@@ -168,7 +168,7 @@
             });
         }
         
-        // Загрузка данных
+        // Загрузка данных пользователя
         async function loadUserData() {
             try {
                 const userId = getUserId();
@@ -194,10 +194,12 @@
             }
         }
         
-        // Загрузка рецептов пользователя
+        // ========== ИСПРАВЛЕНО: Загрузка ТОЛЬКО рецептов текущего пользователя ==========
         async function loadUserRecipes() {
             try {
-                const recipes = await apiCall('/recipes/');
+                const userId = getUserId();
+                // Загружаем только рецепты текущего пользователя
+                const recipes = await apiCall(`/users/${userId}/recipes/`);
                 allUserRecipes = recipes;
                 await loadFavoriteRecipes();
                 filterAndDisplayRecipes();
@@ -207,12 +209,13 @@
             }
         }
         
-        // Загрузка избранных рецептов
+        // Загрузка избранных рецептов (могут быть чужими)
         async function loadFavoriteRecipes() {
             try {
                 const favorites = await apiCall('/favorites/');
                 favoriteRecipes = favorites.map(f => f.recipe_id);
                 
+                // Отмечаем, какие из своих рецептов находятся в избранном
                 allUserRecipes.forEach(recipe => {
                     recipe.isFavorite = favoriteRecipes.includes(recipe.id);
                 });
@@ -336,6 +339,8 @@
         function filterAndDisplayRecipes() {
             let recipesToShow = [...allUserRecipes];
             
+            // Если включен режим "Избранное", показываем только избранные рецепты
+            // (избранные могут быть как свои, так и чужие, но в данном случае показываем только избранные среди своих)
             if (showOnlyFavorites) {
                 recipesToShow = recipesToShow.filter(recipe => recipe.isFavorite);
             }
@@ -514,7 +519,7 @@
         
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
         
-        //Инициализация
+        // Инициализация
         async function init() {
             initDropdown();
             await loadUserData();
