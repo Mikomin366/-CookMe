@@ -708,3 +708,151 @@ body {
 .action-button:hover {
     background-color: #b1d29b;
 }
+
+        /* Дополнительные стили для уведомлений и загрузки */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5A8F4C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification-error {
+            background-color: #D46B3A;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(155, 94, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: #9B5E2E;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #9B5E2E;
+            font-size: 18px;
+        }
+        
+        /* Стили для удаления рецепта */
+        .delete-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .delete-modal-container {
+            background-color: #FFF8EE;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            border: 3px solid #9B5E2E;
+            overflow: hidden;
+        }
+        
+        .delete-modal-header {
+            padding: 20px 24px;
+            background-color: #FFEDD2;
+            border-bottom: 2px solid #9B5E2E;
+        }
+        
+        .delete-modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+            color: #9B5E2E;
+        }
+        
+        .delete-modal-body {
+            padding: 24px;
+            text-align: center;
+            color: #9B5E2E;
+            font-size: 18px;
+        }
+        
+        .delete-modal-footer {
+            padding: 16px 24px;
+            border-top: 2px solid #9B5E2E;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background-color: #FFEDD2;
+        }
+        
+        .delete-modal-btn {
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 2px solid #9B5E2E;
+            font-family: inherit;
+        }
+        
+        .delete-modal-btn-cancel {
+            background-color: #FFF3E0;
+            color: #9B5E2E;
+        }
+        
+        .delete-modal-btn-confirm {
+            background-color: #D46B3A;
+            color: white;
+            border-color: #9B5E2E;
+        }
+        
+        .delete-modal-btn-confirm:hover {
+            background-color: #c05d2e;
+        }
+         .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }

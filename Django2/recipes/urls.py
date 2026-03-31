@@ -1,7 +1,6 @@
 from django.urls import path
 from django.http import JsonResponse
 from . import html_views
-# Исправляем импорт - убираем .api если папки api нет
 from . import views as api_views
 
 def api_root(request):
@@ -45,9 +44,9 @@ urlpatterns = [
     path('api/recipes/<int:recipe_id>/', api_views.api_recipe_detail_handler, name='api_recipe_detail'),
     path('api/recipes/<int:recipe_id>/upload-image/', api_views.api_upload_recipe_image, name='api_upload_recipe_image'),
     path('api/recipes/<int:recipe_id>/photo/', api_views.api_recipe_photo, name='api_recipe_photo'),
+    path('api/recipes/<int:recipe_id>/export-pdf/', api_views.api_export_recipe_pdf, name='api_export_recipe_pdf'),
     
-    # Избранное
-    path('api/favorites/', api_views.api_favorites, name='api_favorites'),
-    path('api/favorites/', api_views.api_add_favorite, name='api_add_favorite'),
-    path('api/favorites/<int:recipe_id>/', api_views.api_remove_favorite, name='api_remove_favorite'),
+    # Избранное - единый обработчик для всех методов
+    path('api/favorites/', api_views.api_favorites_handler, name='api_favorites'),
+    path('api/favorites/<int:recipe_id>/', api_views.api_favorite_detail_handler, name='api_favorite_detail'),
 ]

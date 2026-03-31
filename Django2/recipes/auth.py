@@ -27,10 +27,20 @@ def decode_token(token: str):
 
 
 def get_user_from_token(request):
-    """Получение пользователя из токена в заголовке Authorization"""
+    """Получение пользователя из токена в заголовке Authorization или из cookie"""
     auth_header = request.headers.get('Authorization', '')
+    token = None
+    
+    # Пробуем получить из заголовка
     if auth_header.startswith('Bearer '):
         token = auth_header[7:]
+    
+    # Если нет в заголовке, пробуем из cookie
+    if not token:
+        token = request.COOKIES.get('auth_token')
+    
+    # Если есть токен, декодируем его
+    if token:
         payload = decode_token(token)
         if payload and 'user_id' in payload:
             user_id = payload['user_id']
@@ -39,7 +49,7 @@ def get_user_from_token(request):
             db.close()
             return user
     
-    # Резервный вариант - из сессии (для обратной совместимости)
+    # Резервный вариант - из сессии
     user_id = request.session.get('user_id')
     if user_id:
         db = next(get_db())

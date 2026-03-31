@@ -1,0 +1,399 @@
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        let recipeData = null;
+        let currentStep = 0;
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let isTimerRunning = true;
+        let currentAvatarUrl = 'images/Ellipse 21.png';
+        let tempAvatarFile = null;
+        
+        // Функции авторизации
+        function getToken() {
+            return localStorage.getItem('authToken');
+        }
+        
+        function getUserId() {
+            return localStorage.getItem('userId');
+        }
+        
+        function isAuthenticated() {
+            return !!getToken();
+        }
+        
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            if (isError) {
+                notification.classList.add('notification-error');
+            }
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Управление иконкой профиля
+        function updateAuthUI() {
+            const authButtons = document.getElementById('authButtons');
+            const profileIcon = document.getElementById('profileIcon');
+            const isLoggedIn = isAuthenticated();
+            
+            if (isLoggedIn) {
+                authButtons.style.display = 'none';
+                profileIcon.style.display = 'block';
+                loadProfileAvatar();
+            } else {
+                authButtons.style.display = 'flex';
+                profileIcon.style.display = 'none';
+            }
+        }
+        
+        async function loadProfileAvatar() {
+            try {
+                const token = getToken();
+                const userId = getUserId();
+                if (!token || !userId) return;
+                
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.avatar) {
+                        currentAvatarUrl = user.avatar;
+                        document.getElementById('profileAvatar').src = currentAvatarUrl;
+                        document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки аватара:', error);
+            }
+        }
+        
+        function initProfileDropdown() {
+            const profileIcon = document.getElementById('profileIcon');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            if (profileIcon) {
+                profileIcon.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+            }
+            
+            document.addEventListener('click', () => {
+                if (dropdownMenu) dropdownMenu.classList.remove('show');
+            });
+            
+            if (dropdownMenu) {
+                dropdownMenu.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                });
+            }
+            
+            const logoutBtn = document.getElementById('logoutBtnChef');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userId');
+                    window.location.href = 'main.html';
+                });
+            }
+            
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.remove('show');
+                    openModal();
+                });
+            }
+        }
+        
+        // Модальное окно
+        const modal = document.getElementById('editProfileModal');
+        
+        function openModal() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+            tempAvatarFile = null;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            tempAvatarFile = null;
+        }
+        
+        async function saveProfile() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const hasPasswordChange = !!newPassword;
+            const hasAvatarChange = !!tempAvatarFile;
+            
+            if (!hasPasswordChange && !hasAvatarChange) {
+                closeModal();
+                return;
+            }
+            
+            if (hasPasswordChange) {
+                if (!currentPassword) {
+                    showNotification('Введите текущий пароль', true);
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    showNotification('Пароли не совпадают', true);
+                    return;
+                }
+                if (newPassword.length < 4) {
+                    showNotification('Минимум 4 символа', true);
+                    return;
+                }
+            }
+            
+            const saveBtn = document.getElementById('saveProfileBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span> Сохранение...';
+            
+            try {
+                if (hasPasswordChange) {
+                    await apiCall(`/users/${getUserId()}/change-password/`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            new_password: newPassword
+                        })
+                    });
+                    showNotification('Пароль изменен');
+                }
+                
+                if (hasAvatarChange) {
+                    const formData = new FormData();
+                    formData.append('avatar', tempAvatarFile);
+                    
+                    const response = await fetch(`${API_BASE_URL}/users/${getUserId()}/upload-avatar/`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${getToken()}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    currentAvatarUrl = data.avatar;
+                    document.getElementById('profileAvatar').src = currentAvatarUrl;
+                    document.getElementById('modalAvatarPreview').src = currentAvatarUrl;
+                    showNotification('Аватар обновлен');
+                }
+                
+                closeModal();
+                
+            } catch (error) {
+                showNotification(error.message, true);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Сохранить';
+            }
+        }
+        
+        // Загрузка аватара в модальном окне
+        document.getElementById('uploadAvatarBtn').onclick = () => document.getElementById('avatarUpload').click();
+        document.getElementById('avatarUpload').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file && file.size <= 5 * 1024 * 1024) {
+                tempAvatarFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    document.getElementById('modalAvatarPreview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                showNotification('Файл больше 5MB', true);
+            }
+        };
+        
+        // Обработчики модального окна
+        document.getElementById('closeProfileModalBtn').onclick = closeModal;
+        document.getElementById('cancelProfileModalBtn').onclick = closeModal;
+        document.getElementById('saveProfileBtn').onclick = saveProfile;
+        modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+        
+        // Api запросы
+        async function apiCall(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                ...options,
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Ошибка запроса' }));
+                throw new Error(error.message || 'Ошибка сервера');
+            }
+            
+            return response.json();
+        }
+        
+        // Таймер и шаги готовки
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            isTimerRunning = false;
+            const controlBtn = document.getElementById('timerControlBtn');
+            if (controlBtn) controlBtn.textContent = 'Запуск';
+        }
+        
+        function startTimer(minutes) {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            if (!minutes || minutes <= 0) {
+                document.getElementById('timerValue').textContent = '0';
+                return;
+            }
+            
+            timeRemaining = minutes * 60;
+            isTimerRunning = true;
+            const controlBtn = document.getElementById('timerControlBtn');
+            if (controlBtn) controlBtn.textContent = 'Пауза';
+            
+            timerInterval = setInterval(() => {
+                if (!isTimerRunning) return;
+                
+                if (timeRemaining <= 0) {
+                    stopTimer();
+                    document.getElementById('timerValue').textContent = '0';
+                    showNotification('Время вышло! Можно переходить к следующему шагу.');
+                } else {
+                    timeRemaining--;
+                    const minutesLeft = Math.floor(timeRemaining / 60);
+                    const secondsLeft = timeRemaining % 60;
+                    document.getElementById('timerValue').textContent = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        
+        function pauseTimer() {
+            if (!timerInterval) return;
+            
+            if (isTimerRunning) {
+                isTimerRunning = false;
+                document.getElementById('timerControlBtn').textContent = 'Запуск';
+                showNotification('Таймер на паузе');
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timerControlBtn').textContent = 'Пауза';
+                showNotification('Таймер запущен');
+            }
+        }
+        
+        function displayStep() {
+            if (!recipeData || !recipeData.steps || recipeData.steps.length === 0) {
+                document.getElementById('stepText').textContent = 'Нет данных о шагах приготовления';
+                document.getElementById('stepNumber').textContent = '';
+                document.getElementById('stepTitle').textContent = 'Текущий шаг';
+                return;
+            }
+            
+            const step = recipeData.steps[currentStep];
+            const stepNumber = currentStep + 1;
+            const totalSteps = recipeData.steps.length;
+            
+            document.getElementById('stepTitle').textContent = `Шаг ${stepNumber} из ${totalSteps}`;
+            document.getElementById('stepNumber').textContent = '';
+            document.getElementById('stepText').textContent = step.text || 'Описание отсутствует';
+            
+            const stepTime = step.time || 0;
+            startTimer(stepTime);
+        }
+        
+        function nextStep() {
+            if (!recipeData || !recipeData.steps) return;
+            
+            if (currentStep < recipeData.steps.length - 1) {
+                currentStep++;
+                displayStep();
+            } else {
+                showNotification('Поздравляем! Вы завершили все шаги приготовления!');
+                stopTimer();
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 2000);
+            }
+        }
+        
+        function prevStep() {
+            if (!recipeData || !recipeData.steps) return;
+            
+            if (currentStep > 0) {
+                currentStep--;
+                displayStep();
+            } else {
+                showNotification('Это первый шаг');
+            }
+        }
+        
+        function loadRecipeFromStorage() {
+            const storedData = localStorage.getItem('chefRecipeData');
+            
+            if (!storedData) {
+                showNotification('Данные рецепта не найдены');
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 2000);
+                return;
+            }
+            
+            try {
+                recipeData = JSON.parse(storedData);
+                
+                if (recipeData.name) {
+                    document.getElementById('recipeTitle').textContent = recipeData.name;
+                }
+                
+                if (!recipeData.steps || recipeData.steps.length === 0) {
+                    document.getElementById('stepText').textContent = 'В этом рецепте нет пошаговых инструкций';
+                    document.getElementById('stepTitle').textContent = 'Текущий шаг';
+                    return;
+                }
+                
+                currentStep = 0;
+                displayStep();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                showNotification('Ошибка загрузки рецепта');
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 2000);
+            }
+        }
+        
+        // Обработчики
+        document.getElementById('nextButton').addEventListener('click', nextStep);
+        document.getElementById('prevButton').addEventListener('click', prevStep);
+        document.getElementById('timerControlBtn').addEventListener('click', pauseTimer);
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            initProfileDropdown();
+            updateAuthUI();
+            loadRecipeFromStorage();
+        });
+        
+        window.addEventListener('beforeunload', () => {
+            stopTimer();
+        });

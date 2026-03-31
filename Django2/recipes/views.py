@@ -3,10 +3,19 @@ import json
 import datetime
 import logging
 import traceback
+import os
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
+from django.conf import settings
 from PIL import Image
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.fonts import addMapping
 
 from CookME.db import get_db
 from recipes.models_sa import (
@@ -18,6 +27,46 @@ from sqlalchemy.orm import joinedload
 
 logger = logging.getLogger(__name__)
 
+# --------------------- Подключение шрифтов ---------------------
+def register_fonts():
+    """Регистрирует русские шрифты из папки static/fonts"""
+    fonts_registered = False
+    default_font = 'Helvetica'
+    
+    # Путь к папке со шрифтами
+    fonts_dir = os.path.join(settings.BASE_DIR, 'static', 'fonts')
+    
+    # Список возможных шрифтов в порядке приоритета
+    font_files = [
+        ('DejaVuSans', 'DejaVuSans.ttf'),
+        ('DejaVuSans', 'DejaVuSans.ttf'),
+        ('FreeSans', 'FreeSans.ttf'),
+        ('Arial', 'arial.ttf'),
+        ('Arial', 'Arial.ttf'),
+        ('Roboto', 'Roboto-Regular.ttf'),
+        ('OpenSans', 'OpenSans-Regular.ttf'),
+    ]
+    
+    for font_name, font_file in font_files:
+        font_path = os.path.join(fonts_dir, font_file)
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont(font_name, font_path))
+                default_font = font_name
+                fonts_registered = True
+                print(f"✅ Font registered: {font_name} from {font_path}")
+                break
+            except Exception as e:
+                print(f"⚠️ Failed to register font {font_name}: {e}")
+    
+    if not fonts_registered:
+        print("⚠️ No custom fonts found, using default Helvetica")
+    
+    return default_font
+
+# Регистрируем шрифты при загрузке модуля
+DEFAULT_FONT = register_fonts()
+
 
 # --------------------- Вспомогательные функции ---------------------
 def json_response(data, status=200):
@@ -26,6 +75,151 @@ def json_response(data, status=200):
         return JsonResponse(data, status=status, json_dumps_params={'ensure_ascii': False})
     else:
         return JsonResponse(data, safe=False, status=status, json_dumps_params={'ensure_ascii': False})
+
+
+def generate_recipe_pdf(recipe_data):
+    """Генерирует PDF с рецептом с использованием русских шрифтов"""
+    buffer = io.BytesIO()
+    
+    # Создаем PDF документ
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72,
+    )
+    
+    # Стили
+    styles = getSampleStyleSheet()
+    
+    # Создаем стили для русского текста с подключенными шрифтами
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#9B5E2E'),
+        spaceAfter=30,
+        alignment=1,  # Центр
+        fontName=DEFAULT_FONT
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=18,
+        textColor=colors.HexColor('#9B5E2E'),
+        spaceAfter=12,
+        spaceBefore=12,
+        fontName=DEFAULT_FONT
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=14,
+        fontName=DEFAULT_FONT
+    )
+    
+    meta_style = ParagraphStyle(
+        'MetaStyle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        fontName=DEFAULT_FONT
+    )
+    
+    # Список элементов для документа
+    elements = []
+    
+    # Заголовок
+    title = Paragraph(recipe_data.get('name', 'Рецепт'), title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 12))
+    
+    # Дата создания
+    current_date = datetime.datetime.now().strftime('%d.%m.%Y %H:%M')
+    date_paragraph = Paragraph(f'Создано: {current_date}', meta_style)
+    elements.append(date_paragraph)
+    elements.append(Spacer(1, 20))
+    
+    # Мета-информация таблицей
+    meta_data = [
+        ['⏱️ Время готовки:', f"{recipe_data.get('cooking_time', 'Не указано')} мин."],
+        ['🔥 Калории:', f"{recipe_data.get('calories', 'Не указано')} ккал"],
+        ['📂 Категории:', recipe_data.get('categories', ['Не указано'])[0] if recipe_data.get('categories') else 'Не указано'],
+        ['👤 Автор:', recipe_data.get('author', 'Неизвестный')],
+    ]
+    
+    meta_table = Table(meta_data, colWidths=[100, 350])
+    meta_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), DEFAULT_FONT),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#9B5E2E')),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(meta_table)
+    elements.append(Spacer(1, 20))
+    
+    # Описание
+    if recipe_data.get('description'):
+        elements.append(Paragraph('📝 Описание', heading_style))
+        description = Paragraph(recipe_data['description'].replace('\n', '<br/>'), normal_style)
+        elements.append(description)
+        elements.append(Spacer(1, 15))
+    
+    # Ингредиенты
+    elements.append(Paragraph('🥘 Ингредиенты', heading_style))
+    ingredients = recipe_data.get('ingredients', [])
+    if ingredients:
+        ingredients_list = []
+        for ing in ingredients:
+            text = ing.get('name', '')
+            if ing.get('quantity') and ing.get('quantity') != '0':
+                text += f" — {ing.get('quantity')}"
+                if ing.get('unit'):
+                    text += f" {ing.get('unit')}"
+            elif ing.get('unit'):
+                text += f" — {ing.get('unit')}"
+            ingredients_list.append(f"• {text}")
+        
+        ingredients_text = '<br/>'.join(ingredients_list)
+        ingredients_para = Paragraph(ingredients_text, normal_style)
+        elements.append(ingredients_para)
+    else:
+        elements.append(Paragraph('Ингредиенты не указаны', normal_style))
+    elements.append(Spacer(1, 20))
+    
+    # Шаги приготовления
+    elements.append(Paragraph('👨‍🍳 Пошаговое приготовление', heading_style))
+    steps = recipe_data.get('steps', [])
+    if steps:
+        for idx, step in enumerate(steps, 1):
+            step_text = f"<b>{idx}.</b> {step.get('text', '')}"
+            if step.get('time') and step.get('time') > 0:
+                step_text += f" <font color='#666666'>(⏱️ {step.get('time')} мин.)</font>"
+            step_para = Paragraph(step_text, normal_style)
+            elements.append(step_para)
+            elements.append(Spacer(1, 8))
+    else:
+        elements.append(Paragraph('Шаги приготовления не указаны', normal_style))
+    elements.append(Spacer(1, 30))
+    
+    # Футер
+    footer_text = '<font size="8" color="#999999">CookBook — Ваши любимые рецепты всегда под рукой</font>'
+    footer = Paragraph(footer_text, normal_style)
+    elements.append(footer)
+    
+    # Строим PDF
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
 
 
 # --------------------- Аутентификация ---------------------
@@ -60,12 +254,34 @@ def api_login(request):
         # Создаём JWT токен
         token = create_access_token(data={'user_id': user.ID})
         
-        return json_response({
+        # Создаем ответ с данными пользователя
+        response = json_response({
             'token': token,
             'id': user.ID,
             'login': user.Login,
             'avatar': f'/api/avatar/{user.ID}/' if user.avatar_blob else None
         })
+        
+        # Устанавливаем cookie с токеном
+        response.set_cookie(
+            'auth_token', 
+            token, 
+            httponly=False,
+            max_age=7*24*3600,
+            path='/',
+            samesite='Lax'
+        )
+        
+        response.set_cookie(
+            'user_id',
+            str(user.ID),
+            httponly=False,
+            max_age=7*24*3600,
+            path='/',
+            samesite='Lax'
+        )
+        
+        return response
         
     except json.JSONDecodeError as e:
         return json_response({'error': f'Ошибка парсинга JSON: {str(e)}'}, 400)
@@ -445,7 +661,10 @@ def api_recipe_detail(request, recipe_id):
         print(f"ERROR in api_recipe_detail: {e}")
         import traceback
         traceback.print_exc()
+        # В api_recipe_detail, перед return
+        print(f"Recipe author_id: {recipe.ID_user}, current user: {user.ID if user else None}")
         return json_response({'error': str(e)}, 500)
+
 
 
 @csrf_exempt
@@ -779,8 +998,95 @@ def api_upload_recipe_image(request, recipe_id):
         return json_response({'error': str(e)}, 500)
 
 
+@csrf_exempt
+def api_export_recipe_pdf(request, recipe_id):
+    """Экспорт рецепта в PDF"""
+    if request.method != 'GET':
+        return json_response({'error': 'Метод не разрешен'}, 405)
+    
+    try:
+        print(f"\n=== EXPORT RECIPE {recipe_id} TO PDF ===")
+        
+        db = next(get_db())
+        recipe = db.query(Receipt).filter(Receipt.ID == recipe_id).first()
+        
+        if not recipe:
+            db.close()
+            return json_response({'error': 'Рецепт не найден'}, 404)
+        
+        # Получаем ингредиенты
+        ingredients = db.query(RecipeIngredient)\
+            .options(joinedload(RecipeIngredient.ingredient))\
+            .filter(RecipeIngredient.recipe_id == recipe.ID)\
+            .all()
+        
+        # Получаем категории
+        categories = db.query(Category)\
+            .join(ReceiptCategory)\
+            .filter(ReceiptCategory.Rec_ID == recipe.ID)\
+            .all()
+        
+        # Получаем шаги
+        steps = db.query(Steprecept)\
+            .filter(Steprecept.recipe_ID == recipe.ID)\
+            .order_by(Steprecept.step_number)\
+            .all()
+        
+        # Получаем автора
+        author = db.query(User).filter(User.ID == recipe.ID_user).first()
+        author_name = author.Login if author else 'Неизвестный'
+        
+        # Подготавливаем данные для PDF
+        recipe_data = {
+            'id': recipe.ID,
+            'name': recipe.name,
+            'cooking_time': recipe.time,
+            'calories': recipe.Calories,
+            'description': recipe.description,
+            'categories': [cat.name for cat in categories],
+            'author': author_name,
+            'ingredients': [
+                {
+                    'name': ing.ingredient.name,
+                    'quantity': str(ing.quantity) if ing.quantity else '',
+                    'unit': ing.unit or ''
+                }
+                for ing in ingredients
+            ],
+            'steps': [
+                {
+                    'text': step.description,
+                    'time': step.timer,
+                    'order': step.step_number
+                }
+                for step in steps
+            ]
+        }
+        
+        db.close()
+        
+        # Генерируем PDF
+        pdf_buffer = generate_recipe_pdf(recipe_data)
+        
+        # Создаем HTTP ответ с PDF
+        filename = f"{recipe.name.replace(' ', '_')}_рецепт.pdf"
+        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = pdf_buffer.getbuffer().nbytes
+        
+        print(f"✅ PDF generated successfully: {filename}")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error generating PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        return json_response({'error': str(e)}, 500)
+
+
 # --------------------- Избранное ---------------------
 def api_favorites(request):
+    """Получение списка избранных рецептов пользователя"""
     if request.method != 'GET':
         return json_response({'error': 'Метод не разрешен'}, 405)
     
@@ -789,10 +1095,12 @@ def api_favorites(request):
         return JsonResponse([], safe=False)
     
     db = next(get_db())
-    favorites = db.query(Favorite).filter(Favorite.user_id == user.ID).all()
-    result = [{'recipe_id': fav.recipe_id, 'id': fav.ID} for fav in favorites]
-    db.close()
-    return JsonResponse(result, safe=False, json_dumps_params={'ensure_ascii': False})
+    try:
+        favorites = db.query(Favorite).filter(Favorite.user_id == user.ID).all()
+        result = [{'recipe_id': fav.recipe_id, 'id': fav.ID} for fav in favorites]
+        return JsonResponse(result, safe=False)
+    finally:
+        db.close()
 
 
 @csrf_exempt
@@ -864,7 +1172,7 @@ def api_remove_favorite(request, recipe_id):
         db.close()
 
 
-# --------------------- Обработчики ---------------------
+# --------------------- Единые обработчики ---------------------
 @csrf_exempt
 def api_recipes_handler(request):
     """Обрабатывает GET (список) и POST (создание) запросы"""
@@ -885,5 +1193,25 @@ def api_recipe_detail_handler(request, recipe_id):
         return api_recipe_update(request, recipe_id)
     elif request.method == 'DELETE':
         return api_recipe_delete(request, recipe_id)
+    else:
+        return json_response({'error': 'Метод не разрешен'}, 405)
+
+
+@csrf_exempt
+def api_favorites_handler(request):
+    """Единый обработчик для /api/favorites/"""
+    if request.method == 'GET':
+        return api_favorites(request)
+    elif request.method == 'POST':
+        return api_add_favorite(request)
+    else:
+        return json_response({'error': 'Метод не разрешен'}, 405)
+
+
+@csrf_exempt
+def api_favorite_detail_handler(request, recipe_id):
+    """Обработчик для /api/favorites/<recipe_id>/"""
+    if request.method == 'DELETE':
+        return api_remove_favorite(request, recipe_id)
     else:
         return json_response({'error': 'Метод не разрешен'}, 405)
