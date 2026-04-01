@@ -7,22 +7,22 @@
         window.imageFile = null;
         window.currentAvatarUrl = '/static/images/Ellipse 21.png';
         window.tempAvatarFile = null;
-        
+
         const API_BASE_URL = 'http://localhost:8000/api';
-        
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+        // Вспомогательные функции
         function getToken() {
             return localStorage.getItem('authToken');
         }
-        
+
         function getUserId() {
             return localStorage.getItem('userId');
         }
-        
+
         function isAuthenticated() {
             return !!getToken();
         }
-        
+
         function showNotification(message, isError = false) {
             const notification = document.createElement('div');
             notification.className = 'notification';
@@ -33,7 +33,7 @@
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
         }
-        
+
         function showLoading() {
             const overlay = document.createElement('div');
             overlay.id = 'loadingOverlay';
@@ -41,12 +41,12 @@
             overlay.innerHTML = '<div class="loading-content"><div class="loading-spinner"></div><br>Загрузка рецепта...</div>';
             document.body.appendChild(overlay);
         }
-        
+
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) overlay.remove();
         }
-        
+
         function escapeHtml(str) {
             if (!str) return '';
             return String(str)
@@ -56,27 +56,77 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
-        
+
         function protectNumberField(field) {
             if (!field) return;
+            
+            field.addEventListener('input', function() {
+                if (this.value.length > 5) {
+                    this.value = this.value.slice(0, 5);
+                }
+            });
+            
             const sanitizeValue = () => {
                 let value = parseFloat(field.value);
                 if (isNaN(value)) value = 0;
                 if (value < 0) value = 0;
                 field.value = value;
             };
-            field.addEventListener('input', sanitizeValue);
             field.addEventListener('change', sanitizeValue);
             field.addEventListener('blur', sanitizeValue);
             sanitizeValue();
         }
-        
+
         function getRecipeIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
             return params.get('id');
         }
-        
-        // ========== ОТОБРАЖЕНИЕ ИНГРЕДИЕНТОВ ==========
+
+        function setMaxLengths() {
+            const recipeName = document.getElementById('recipeName');
+            const category1 = document.getElementById('category1');
+            const category2 = document.getElementById('category2');
+            
+            if (recipeName) recipeName.maxLength = 50;
+            if (category1) category1.maxLength = 30;
+            if (category2) category2.maxLength = 30;
+        }
+
+        function validateFormData() {
+            const recipeName = document.getElementById('recipeName').value.trim();
+            
+            if (recipeName.length === 0) {
+                showNotification('Введите название рецепта', true);
+                return false;
+            }
+            
+            let hasValidIngredient = false;
+            for (let ing of window.ingredients) {
+                if (ing.name && ing.name.trim()) {
+                    hasValidIngredient = true;
+                }
+            }
+            
+            if (!hasValidIngredient) {
+                showNotification('Добавьте хотя бы один ингредиент', true);
+                return false;
+            }
+            
+            let hasValidStep = false;
+            for (let step of window.steps) {
+                if (step.text && step.text.trim()) {
+                    hasValidStep = true;
+                }
+            }
+            
+            if (!hasValidStep) {
+                showNotification('Добавьте хотя бы один шаг приготовления', true);
+                return false;
+            }
+            
+            return true;
+        }
+
         function renderIngredients() {
             const container = document.getElementById('ingredientsList');
             if (!container) return;
@@ -88,9 +138,9 @@
             
             container.innerHTML = window.ingredients.map(ing => `
                 <div class="ingredient-item" data-ingredient-id="${ing.id}">
-                    <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название">
-                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || 0)}" placeholder="Кол-во" step="0.1" min="0">
-                    <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг">
+                    <input type="text" class="ingredient-name" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.name || '')}" placeholder="Название" maxlength="20">
+                    <input type="number" class="ingredient-quantity" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.quantity || 0)}" placeholder="Кол-во" step="0.1" min="0" maxlength="5" oninput="if(this.value.length > 5) this.value = this.value.slice(0,5)">
+                    <input type="text" class="ingredient-unit" data-ingredient-id="${ing.id}" value="${escapeHtml(ing.unit || '')}" placeholder="шт/г/кг" maxlength="20">
                     <button class="delete-ingredient-button" data-ingredient-id="${ing.id}">
                         <img src="/static/images/delete.png" alt="Удалить">
                     </button>
@@ -131,7 +181,7 @@
                 });
             });
         }
-        
+
         function addNewIngredient() {
             const newId = window.nextIngredientId++;
             window.ingredients.push({
@@ -146,8 +196,7 @@
                 if (newInput) newInput.focus();
             }, 30);
         }
-        
-        // ========== ОТОБРАЖЕНИЕ ШАГОВ ==========
+
         function renderSteps() {
             const container = document.getElementById('stepsContainer');
             if (!container) return;
@@ -161,9 +210,9 @@
                 <div class="step-item" data-step-id="${step.id}">
                     <div class="step-number">${idx + 1}</div>
                     <div class="step-content">
-                        <textarea class="step-textarea" data-step-id="${step.id}" placeholder="Опишите шаг приготовления...">${escapeHtml(step.text)}</textarea>
+                        <textarea class="step-textarea" data-step-id="${step.id}" placeholder="Опишите шаг приготовления..." maxlength="150">${escapeHtml(step.text)}</textarea>
                         <div class="step-time-wrapper">
-                            <input type="number" class="step-time-input" data-step-id="${step.id}" value="${step.time || 0}" placeholder="Время" min="0" step="1">
+                            <input type="number" class="step-time-input" data-step-id="${step.id}" value="${step.time || 0}" placeholder="Время" min="0" step="1" maxlength="5" oninput="if(this.value.length > 5) this.value = this.value.slice(0,5)">
                             <span class="step-time-label">мин.</span>
                         </div>
                     </div>
@@ -199,7 +248,7 @@
                 });
             });
         }
-        
+
         function addNewStep() {
             const newId = window.nextStepId++;
             window.steps.push({
@@ -213,8 +262,7 @@
                 if (newTextarea) newTextarea.focus();
             }, 30);
         }
-        
-        // ========== ЗАГРУЗКА РЕЦЕПТА ==========
+
         async function loadRecipeForEdit() {
             window.recipeId = getRecipeIdFromUrl();
             
@@ -238,7 +286,6 @@
                 
                 const recipe = await response.json();
                 
-                // Заполняем форму
                 document.getElementById('recipeName').value = recipe.name || '';
                 document.getElementById('category1').value = recipe.category1 || (recipe.categories && recipe.categories[0]) || '';
                 document.getElementById('category2').value = recipe.category2 || (recipe.categories && recipe.categories[1]) || '';
@@ -249,7 +296,6 @@
                 protectNumberField(document.getElementById('cookingTime'));
                 protectNumberField(document.getElementById('calories'));
                 
-                // Загружаем ингредиенты
                 window.ingredients = [];
                 window.nextIngredientId = 1;
                 if (recipe.ingredients && recipe.ingredients.length > 0) {
@@ -264,7 +310,6 @@
                 }
                 renderIngredients();
                 
-                // Загружаем шаги
                 window.steps = [];
                 window.nextStepId = 1;
                 if (recipe.steps && recipe.steps.length > 0) {
@@ -278,7 +323,6 @@
                 }
                 renderSteps();
                 
-                // Загружаем изображение
                 if (recipe.image) {
                     const imageBox = document.getElementById('imageBox');
                     imageBox.innerHTML = '';
@@ -296,9 +340,12 @@
                 hideLoading();
             }
         }
-        
-        // ========== СОХРАНЕНИЕ РЕЦЕПТА ==========
+
         async function saveRecipe() {
+            if (!validateFormData()) {
+                return;
+            }
+            
             const recipeName = document.getElementById('recipeName').value.trim();
             const category1 = document.getElementById('category1').value.trim();
             const category2 = document.getElementById('category2').value.trim();
@@ -326,21 +373,6 @@
                     time: parseInt(step.time) || 0,
                     order: stepOrder++
                 }));
-            
-            if (!recipeName) {
-                showNotification('Введите название рецепта', true);
-                return;
-            }
-            
-            if (ingredientsData.length === 0) {
-                showNotification('Добавьте хотя бы один ингредиент', true);
-                return;
-            }
-            
-            if (stepsData.length === 0) {
-                showNotification('Добавьте хотя бы один шаг', true);
-                return;
-            }
             
             const saveBtn = document.getElementById('saveRecipeButton');
             saveBtn.disabled = true;
@@ -384,7 +416,7 @@
                 
                 showNotification('Рецепт сохранён!');
                 setTimeout(() => {
-                    window.location.href = `information.html?id=${window.recipeId}`;
+                    window.location.href = `/information.html?id=${window.recipeId}`;
                 }, 1500);
                 
             } catch (error) {
@@ -393,8 +425,7 @@
                 saveBtn.innerHTML = 'Сохранить';
             }
         }
-        
-        // ========== УДАЛЕНИЕ РЕЦЕПТА ==========
+
         async function deleteRecipe() {
             if (!confirm('Вы уверены, что хотите удалить этот рецепт?')) return;
             
@@ -415,7 +446,7 @@
                 
                 showNotification('Рецепт удалён');
                 setTimeout(() => {
-                    window.location.href = 'profile.html';
+                    window.location.href = '/profile.html';
                 }, 1500);
                 
             } catch (error) {
@@ -424,8 +455,7 @@
                 deleteBtn.innerHTML = 'Удалить';
             }
         }
-        
-        // ========== ЗАГРУЗКА АВАТАРА ==========
+
         async function loadUserAvatar() {
             try {
                 const userId = getUserId();
@@ -446,10 +476,9 @@
                 console.error('Ошибка загрузки аватара:', error);
             }
         }
-        
-        // ========== МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ==========
+
         const modal = document.getElementById('editProfileModal');
-        
+
         function openModal() {
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
@@ -459,13 +488,13 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeModal() {
             modal.classList.remove('active');
             document.body.style.overflow = '';
             window.tempAvatarFile = null;
         }
-        
+
         async function saveProfile() {
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
@@ -490,6 +519,10 @@
                 }
                 if (newPassword.length < 4) {
                     showNotification('Минимум 4 символа', true);
+                    return;
+                }
+                if (newPassword.length > 75) {
+                    showNotification('Пароль не может превышать 75 символов', true);
                     return;
                 }
             }
@@ -544,24 +577,20 @@
                 saveBtn.innerHTML = 'Сохранить';
             }
         }
-        
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+
         function init() {
             console.log('Edit page initialized');
             
-            // Загружаем аватар
-            loadUserAvatar();
+            setMaxLengths();
             
-            // Загружаем рецепт
+            loadUserAvatar();
             loadRecipeForEdit();
             
-            // Назначаем обработчики событий
             document.getElementById('addIngredientButton')?.addEventListener('click', addNewIngredient);
             document.getElementById('addStepButton')?.addEventListener('click', addNewStep);
             document.getElementById('saveRecipeButton')?.addEventListener('click', saveRecipe);
             document.getElementById('deleteRecipeButton')?.addEventListener('click', deleteRecipe);
             
-            // Загрузка фото
             document.getElementById('imageBox')?.addEventListener('click', () => {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -586,7 +615,6 @@
                 input.click();
             });
             
-            // Профиль
             document.getElementById('uploadAvatarBtn')?.addEventListener('click', () => document.getElementById('avatarUpload').click());
             document.getElementById('avatarUpload')?.addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -607,7 +635,6 @@
             document.getElementById('saveProfileBtn')?.addEventListener('click', saveProfile);
             modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
             
-            // Выпадающее меню
             const profileIcon = document.getElementById('profileIcon');
             const dropdownMenu = document.getElementById('dropdownMenu');
             
@@ -629,11 +656,10 @@
             document.getElementById('logoutBtn')?.addEventListener('click', () => {
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userId');
-                window.location.href = 'main.html';
+                window.location.href = '/main.html';
             });
         }
-        
-        // Запускаем инициализацию после загрузки DOM
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {

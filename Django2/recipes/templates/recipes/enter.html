@@ -21,20 +21,12 @@
         <form class="login-form" id="loginForm">
             <div class="input-container">
                 <input type="text" id="login" name="login" placeholder="Логин" 
-                autocomplete="username" required>
+                autocomplete="username" required maxlength="15">
             </div>
 
             <div class="input-container">
                 <input type="password" id="password" name="password" placeholder="Пароль" 
-                autocomplete="current-password" required>
-            </div>
-
-            <div class="options-row">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" id="rememberMe">
-                    <p>Запомнить меня</p>
-                </label>
-                <a href="#" class="forgot-link" id="forgotPasswordLink">Забыли пароль?</a>
+                autocomplete="current-password" required maxlength="30">
             </div>
 
             <button type="submit" class="login-button" id="loginButton">Войти</button>

@@ -609,8 +609,6 @@ def api_recipe_detail(request, recipe_id):
             'calories': recipe.Calories,
             'description': recipe.description,
             'categories': [cat.name for cat in categories],
-            'category1': categories[0].name if len(categories) > 0 else '',
-            'category2': categories[1].name if len(categories) > 1 else '',
             'ingredients': [],
             'steps': [],
             'image': f'/api/recipes/{recipe.ID}/photo/' if recipe.photo_blob else None,

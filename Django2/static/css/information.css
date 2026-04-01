@@ -634,3 +634,28 @@ body {
             font-family: inherit;
             transition: all 0.2s;
         }
+
+        .edit-button {
+            width: 320px;
+            height: 100px;
+            background-color: #C5E0B4;
+            border: 3px solid #9B5E2E;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-size: 28px;
+            color: #9B5E2E;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            line-height: 1;
+        }
+
+        .edit-button:hover {
+            background-color: #b1d29b;
+        }
