@@ -152,7 +152,7 @@
                 
                 // Перенаправляем на главную страницу
                 setTimeout(() => {
-                    window.location.href = '/main.html';
+                    window.location.href = '/profile.html';
                 }, 1000);
             } else {
                 showError(result.error || 'Неверный логин или пароль');
