@@ -521,8 +521,8 @@
                     showNotification('Минимум 4 символа', true);
                     return;
                 }
-                if (newPassword.length > 75) {
-                    showNotification('Пароль не может превышать 75 символов', true);
+                if (newPassword.length > 30) {
+                    showNotification('Пароль не может превышать 30 символов', true);
                     return;
                 }
             }

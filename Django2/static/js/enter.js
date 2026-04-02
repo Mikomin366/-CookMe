@@ -110,8 +110,8 @@
                 return false;
             }
             
-            if (password.length > 75) {
-                showError('Пароль не может превышать 75 символов');
+            if (password.length > 30) {
+                showError('Пароль не может превышать 30 символов');
                 passwordInput.focus();
                 return false;
             }
