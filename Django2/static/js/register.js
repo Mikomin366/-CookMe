@@ -134,7 +134,7 @@
                 saveSession(result.data);
                 
                 setTimeout(() => {
-                    window.location.href = 'main.html';
+                    window.location.href = 'profile.html';
                 }, 1500);
             } else {
                 showError(result.error || 'Ошибка при регистрации. Возможно, такой логин уже существует.');
