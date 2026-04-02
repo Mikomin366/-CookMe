@@ -86,7 +86,7 @@ header {
     padding: 10px 20px;
     text-decoration: none;
     color: #9B5E2E;
-    font-size: 14px;
+    font-size: 18px;
     background: white;
     border: none;
     width: 100%;
@@ -326,6 +326,9 @@ body {
     color: #9B5E2E;
     line-height: 1.4;
     margin-bottom: 8px;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .step-time-wrapper {

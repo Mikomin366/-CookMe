@@ -86,7 +86,7 @@ header {
     padding: 10px 20px;
     text-decoration: none;
     color: #9B5E2E;
-    font-size: 14px;
+    font-size: 18px;
     background: white;
     border: none;
     width: 100%;
@@ -251,6 +251,9 @@ body {
     justify-content: center;
     max-width: 800px;
     border: 2px solid #9B5E2E;
+    word-wrap: break-word;      /* перенос длинных слов */
+    word-break: break-word;     /* перенос слов */
+    
 }
 
 /* Стили для модального окна */
